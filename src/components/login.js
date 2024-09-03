@@ -1,14 +1,25 @@
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
+import { auth } from './firebase';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async(event) => {
     event.preventDefault();
     // Handle form submission logic here
-    console.log('Email:', email);
-    console.log('Password:', password);
+    try{
+       await signInWithEmailAndPassword(auth,email,password);
+       console.log('Email:', email);
+       console.log('Password:', password);
+       console.log("login sucessful")
+
+    }catch(error){
+        console.log(error.message)
+
+    }
+
   };
 
   return (
