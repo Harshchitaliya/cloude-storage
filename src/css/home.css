@@ -1,0 +1,158 @@
+/* General Styling */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .home-container {
+    text-align: center;
+    color: #333;
+  }
+  
+  /* Header/NavBar */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #0a1f44;
+    color: white;
+  }
+  
+  .navbar .logo {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .navbar .nav-links a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+  }
+  
+  .navbar .cta-button {
+    padding: 10px 20px;
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .navbar .cta-button:hover {
+    background-color: #e67e22;
+  }
+  
+  /* Hero Section */
+  .hero {
+    height: 90vh;
+    background: url('https://example.com/hero-image.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .hero-content {
+    text-align: center;
+    max-width: 700px;
+  }
+  
+  .hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+  
+  .hero p {
+    font-size: 18px;
+    margin-bottom: 30px;
+  }
+  
+  .hero-button {
+    padding: 15px 30px;
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .hero-button:hover {
+    background-color: #e67e22;
+  }
+  
+  /* Features Section */
+  .features {
+    padding: 50px;
+    background-color: #f4f4f4;
+  }
+  
+  .features h2 {
+    font-size: 32px;
+    margin-bottom: 30px;
+  }
+  
+  .features-list {
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .feature-item {
+    width: 30%;
+    text-align: center;
+  }
+  
+  .feature-item i {
+    font-size: 50px;
+    color: #3498db;
+    margin-bottom: 10px;
+  }
+  
+  .feature-item h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .feature-item p {
+    font-size: 16px;
+  }
+  
+  /* About Section */
+  .about {
+    padding: 50px;
+    background-color: #fff;
+  }
+  
+  .about h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+  
+  .about p {
+    font-size: 18px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 20px;
+    background-color: #0a1f44;
+    color: white;
+  }
+  
+  .footer p {
+    margin: 0;
+  }
+  
+  .social-media a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+  }
+  
+  .social-media a:hover {
+    color: #f39c12;
+  }
+  
