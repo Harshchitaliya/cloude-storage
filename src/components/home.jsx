@@ -1,16 +1,12 @@
 import React from 'react';
-import "../css/home.css"
+import "../css/home.css";
+import Footer from './footer';
 import NavBar from './Navbar';
+
 const HomePage = () => {
   return (
-    <>
     <div className="home-container">
-
-
-       <NavBar/> 
-
-
-      {/* Hero Section */}
+     
       <section className="hero">
         <div className="hero-content">
           <h1>Innovating the Future with Mindron</h1>
@@ -18,8 +14,6 @@ const HomePage = () => {
           <button className="hero-button">Explore More</button>
         </div>
       </section>
-
-      {/* Features Section */}
       <section className="features" id="services">
         <h2>Our Services</h2>
         <div className="features-list">
@@ -40,26 +34,14 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-      {/* About Us Section */}
       <section className="about" id="about">
         <h2>About Mindron</h2>
         <p>
           At Mindron, we believe in shaping the future with technology. Our mission is to provide world-class digital solutions, from cloud services to AI-driven automation.
         </p>
       </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <p>© 2024 Mindron. All rights reserved.</p>
-        <div className="social-media">
-          <a href="#"><i className="fab fa-facebook"></i></a>
-          <a href="#"><i className="fab fa-twitter"></i></a>
-          <a href="#"><i className="fab fa-linkedin"></i></a>
-        </div>
-      </footer>
+      <Footer />
     </div>
-    </>
   );
 };
 
