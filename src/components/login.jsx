@@ -5,21 +5,26 @@ import { auth } from './firebase';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userUid, setUserUid] = useState(''); // State to store the user's UID
 
   const handleSubmit = async(event) => {
     event.preventDefault();
-    // Handle form submission logic here
-    try{
-       await signInWithEmailAndPassword(auth,email,password);
-       console.log('Email:', email);
-       console.log('Password:', password);
-       console.log("login sucessful")
+    try {
+      // Sign in with email and password
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Get the signed-in user's UID
+      const user = userCredential.user;
+      setUserUid(user.uid); // Store the UID in state
+      
+      console.log('Email:', email);
+      console.log('Password:', password);
+      console.log("Login successful");
+      console.log("User UID:", user.uid); // Display UID in console
 
-    }catch(error){
-        console.log(error.message)
-
+    } catch (error) {
+      console.log(error.message);
     }
-
   };
 
   return (
@@ -52,6 +57,10 @@ const LoginForm = () => {
         </div>
 
         <button type="submit" style={styles.button}>Log In</button>
+
+        {userUid && ( // Conditionally render the UID if it exists
+          <p style={styles.uidDisplay}>Logged in as: {userUid}</p>
+        )}
       </form>
     </div>
   );
@@ -66,7 +75,7 @@ const styles = {
     backgroundColor: '#f3f4f4',
   },
   form: {
-    backgroundColor: '#ff',
+    backgroundColor: '#fff',
     padding: '20px',
     borderRadius: '8px',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
@@ -98,6 +107,11 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  uidDisplay: {
+    marginTop: '20px',
+    textAlign: 'center',
+    color: '#28a745',
   },
 };
 
