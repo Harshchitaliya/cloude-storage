@@ -1,37 +1,70 @@
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from './firebase';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [userUid, setUserUid] = useState(''); // State to store the user's UID
+  const [userUid, setUserUid] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  
+  const navigate = useNavigate();
 
-  const handleSubmit = async(event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoginError('');
     try {
-      // Sign in with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Get the signed-in user's UID
       const user = userCredential.user;
-      setUserUid(user.uid); // Store the UID in state
+      setUserUid(user.uid);
+      console.log('Login successful');
+      console.log("User UID:", user.uid);
       
-      console.log('Email:', email);
-      console.log('Password:', password);
-      console.log("Login successful");
-      console.log("User UID:", user.uid); // Display UID in console
-
+      // Save UID in local storage
+      localStorage.setItem('uid', user.uid);
+      
+      // Redirect to home page
+      navigate('/');
     } catch (error) {
-      console.log(error.message);
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        setLoginError('Invalid email or password');
+      } else {
+        setLoginError('Login failed. Please try again.');
+      }
+      console.log("Login error:", error.message);
     }
+  };
+
+  useEffect(() => {
+    if (userUid) {
+      localStorage.setItem('uid', userUid);
+    }
+  }, [userUid]);
+
+  const handlePasswordReset = async () => {
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetEmailSent(true);
+      console.log("Password reset email sent to:", resetEmail);
+    } catch (error) {
+      console.log("Error sending reset email:", error.message);
+    }
+  };
+
+  const toggleResetForm = () => {
+    setShowResetForm(!showResetForm);
+    setResetEmailSent(false);
   };
 
   return (
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.form}>
         <h2 style={styles.title}>Login</h2>
-
+        {loginError && <p style={styles.error}>{loginError}</p>}
         <div style={styles.inputGroup}>
           <label style={styles.label} htmlFor="email">Email</label>
           <input
@@ -43,7 +76,6 @@ const LoginForm = () => {
             required
           />
         </div>
-
         <div style={styles.inputGroup}>
           <label style={styles.label} htmlFor="password">Password</label>
           <input
@@ -55,12 +87,28 @@ const LoginForm = () => {
             required
           />
         </div>
-
         <button type="submit" style={styles.button}>Log In</button>
-
-        {userUid && ( // Conditionally render the UID if it exists
-          <p style={styles.uidDisplay}>Logged in as: {userUid}</p>
-        )}
+        {userUid && <p style={styles.uidDisplay}>Logged in as: {userUid}</p>}
+        <div style={styles.resetContainer}>
+          <p onClick={toggleResetForm} style={styles.toggleLink}>
+            Forgot your password?
+          </p>
+          {showResetForm && (
+            <>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                style={styles.input}
+              />
+              <button type="button" style={styles.resetButton} onClick={handlePasswordReset}>
+                Send Password Reset Email
+              </button>
+              {resetEmailSent && <p style={styles.successMessage}>Password reset email sent!</p>}
+            </>
+          )}
+        </div>
       </form>
     </div>
   );
@@ -112,6 +160,33 @@ const styles = {
     marginTop: '20px',
     textAlign: 'center',
     color: '#28a745',
+  },
+  resetContainer: {
+    marginTop: '20px',
+    textAlign: 'center',
+  },
+  resetButton: {
+    marginTop: '10px',
+    padding: '10px',
+    backgroundColor: '#dc3545',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
+  successMessage: {
+    marginTop: '10px',
+    color: '#28a745',
+  },
+  toggleLink: {
+    color: '#007bff',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+  error: {
+    color: 'red',
+    marginBottom: '15px',
+    textAlign: 'center',
   },
 };
 

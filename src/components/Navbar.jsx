@@ -29,12 +29,16 @@ const NavBar = () => {
             <li className="nav-item">
               <Link className="nav-link" to="/Delete">Delete</Link>
             </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/Logout">Logout</Link>
+            </li>
           </ul>
           <ul className="navbar-nav">
             <li className="nav-item">
               <Link className="nav-link" to="/Profile">Profile</Link>
             </li>
           </ul>
+          
         </div>
       </div>
     </nav>
