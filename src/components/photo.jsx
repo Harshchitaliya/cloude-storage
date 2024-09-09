@@ -5,7 +5,7 @@ import { auth, storage } from './firebase'; // Import your Firebase config
 const fetchPhotos = async (uid) => {
   try {
     console.log(`Fetching photos for UID: ${uid}`);
-    const storageRef = ref(storage, `${uid}/`);
+    const storageRef = ref(storage, `users/${uid}/`);
     console.log('Storage Reference:', storageRef);
 
     const photoList = await listAll(storageRef);
@@ -36,7 +36,7 @@ const fetchPhotos = async (uid) => {
 
 const uploadPhoto = async (uid, file) => {
   try {
-    const storageRef = ref(storage, `${uid}/${file.name}`);
+    const storageRef = ref(storage, `users/${uid}/${file.name}`);
     console.log('Uploading to:', storageRef.fullPath);
     
     // Upload file to Firebase Storage
