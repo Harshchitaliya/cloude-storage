@@ -1,52 +1,25 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { ref, listAll, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { auth, storage } from './firebase'; // Import your Firebase config
+import { ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from './firebase'; // Import your Firebase config
 
 const fetchPhotos = async (uid) => {
   try {
-    console.log(`Fetching photos for UID: ${uid}`);
     const storageRef = ref(storage, `users/${uid}/`);
-    console.log('Storage Reference:', storageRef);
-
     const photoList = await listAll(storageRef);
-    console.log('Photo List:', photoList);
-
-    if (photoList.items.length === 0) {
-      console.warn('No items found at the specified path.');
-    }
 
     const photoURLs = await Promise.all(photoList.items.map(async (item) => {
       try {
         const url = await getDownloadURL(item);
-        console.log('Photo URL:', url);
-        return { url, name: item.name }; // Store URL and file name
+        return { url, name: item.name };
       } catch (error) {
-        console.error('Error getting download URL for item:', item, error.message, error.code, error.stack);
+        console.error('Error getting download URL:', error);
         return null;
       }
     }));
 
-    console.log('Photo URLs:', photoURLs);
     return photoURLs.filter(photo => photo !== null);
   } catch (error) {
-    console.error('Error fetching photos:', error.message, error.code, error.stack);
-    return [];
-  }
-};
-
-const uploadPhoto = async (uid, file) => {
-  try {
-    const storageRef = ref(storage, `users/${uid}/${file.name}`);
-    console.log('Uploading to:', storageRef.fullPath);
-    
-    // Upload file to Firebase Storage
-    await uploadBytes(storageRef, file);
-
-    // Refresh the photo gallery after upload
-    const updatedPhotos = await fetchPhotos(uid);
-    return updatedPhotos;
-  } catch (error) {
-    console.error('Error uploading photo:', error.message, error.code, error.stack);
+    console.error('Error fetching photos:', error);
     return [];
   }
 };
@@ -54,63 +27,22 @@ const uploadPhoto = async (uid, file) => {
 const PhotoGallery = () => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [showOptions, setShowOptions] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const menuRef = useRef(null);
 
   useEffect(() => {
     const storedUID = localStorage.getItem('uid');
-    console.log('Stored UID:', storedUID);
-
     if (storedUID) {
       fetchPhotos(storedUID).then((urls) => {
         setPhotos(urls);
         setLoading(false);
-      }).catch((error) => {
-        console.error('Error in fetching photos:', error.message, error.code, error.stack);
-        setPhotos([]);
-        setLoading(false);
       });
     } else {
-      setPhotos([]);
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowOptions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleUpload = async () => {
-    const storedUID = localStorage.getItem('uid');
-    if (storedUID && file) {
-      setUploading(true);
-      const updatedPhotos = await uploadPhoto(storedUID, file);
-      setPhotos(updatedPhotos);
-      setFile(null);
-      setUploading(false);
-    }
-  };
-
-  const handlePhotoClick = (photo, event) => {
-    const { clientX: left, clientY: top } = event;
+  const handlePhotoClick = (photo) => {
     setSelectedPhoto(photo);
-    setMenuPosition({ top: top + 10, left: left + 10 });
-    setShowOptions(true);
   };
 
   const handleDownload = () => {
@@ -121,7 +53,6 @@ const PhotoGallery = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setShowOptions(false);
     }
   };
 
@@ -131,18 +62,27 @@ const PhotoGallery = () => {
         title: 'Check out this photo',
         url: selectedPhoto.url,
       }).catch(console.error);
-      setShowOptions(false);
     }
   };
 
   const handleCopyLink = () => {
     if (selectedPhoto) {
       navigator.clipboard.writeText(selectedPhoto.url)
-        .then(() => {
-          alert('Link copied to clipboard');
-        })
+        .then(() => alert('Link copied to clipboard'))
         .catch(console.error);
-      setShowOptions(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selectedPhoto) {
+      try {
+        const photoRef = ref(storage, `users/${localStorage.getItem('uid')}/${selectedPhoto.name}`);
+        await deleteObject(photoRef);
+        setPhotos(photos.filter(photo => photo.name !== selectedPhoto.name));
+        setSelectedPhoto(null);
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+      }
     }
   };
 
@@ -152,32 +92,32 @@ const PhotoGallery = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.uploadSection}>
-        <input type="file" onChange={handleFileChange} />
-        <button onClick={handleUpload} disabled={uploading}>
-          {uploading ? 'Uploading...' : 'Upload Photo'}
-        </button>
-      </div>
       <div style={styles.galleryContainer}>
         {photos.length > 0 ? photos.map((photo, index) => (
           <div
             key={index}
             style={styles.photoContainer}
-            onClick={(e) => handlePhotoClick(photo, e)}
+            onClick={() => handlePhotoClick(photo)}
           >
             <img src={photo.url} alt={`Photo ${index}`} style={styles.photo} />
+            <div style={styles.overlay}>
+              <p style={styles.photoName}>{photo.name}</p>
+            </div>
           </div>
         )) : <p>No photos available</p>}
       </div>
-      {showOptions && selectedPhoto && (
-        <div
-          ref={menuRef}
-          style={{ ...styles.optionsMenu, top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
-        >
-          <button onClick={handleDownload}>Download</button>
-          <button onClick={handleShare}>Share</button>
-          <button onClick={handleCopyLink}>Copy Link</button>
-          <button onClick={() => setShowOptions(false)} style={styles.closeButton}>Close</button>
+
+      {selectedPhoto && (
+        <div style={styles.card}>
+          <img src={selectedPhoto.url} alt="Selected" style={styles.cardImage} />
+          <p style={styles.photoName}>Photo Name: {selectedPhoto.name}</p>
+          <div style={styles.cardActions}>
+            <button style={styles.button} onClick={handleDownload}>Download</button>
+            <button style={styles.button} onClick={handleShare}>Share</button>
+            <button style={styles.button} onClick={handleCopyLink}>Copy Link</button>
+            <button style={styles.button} onClick={handleDelete}>Delete</button>
+            <button style={styles.closeButton} onClick={() => setSelectedPhoto(null)}>Close</button>
+          </div>
         </div>
       )}
     </div>
@@ -187,10 +127,6 @@ const PhotoGallery = () => {
 const styles = {
   container: {
     padding: '20px',
-    position: 'relative',
-  },
-  uploadSection: {
-    marginBottom: '20px',
   },
   galleryContainer: {
     display: 'grid',
@@ -200,30 +136,72 @@ const styles = {
   photoContainer: {
     position: 'relative',
     cursor: 'pointer',
+    overflow: 'hidden',
   },
   photo: {
     width: '100%',
     height: 'auto',
-    display: 'block',
+    borderRadius: '10px',
   },
-  optionsMenu: {
+  overlay: {
     position: 'absolute',
-    background: 'white',
-    border: '1px solid #ccc',
-    padding: '10px',
-    borderRadius: '5px',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+    bottom: '0',
+    background: 'rgba(0, 0, 0, 0.5)',
+    color: '#fff',
+    width: '100%',
+    textAlign: 'center',
+    padding: '5px',
+  },
+  photoName: {
+    margin: 0,
+  },
+  card: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: '#fff',
+    padding: '20px',
+    boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
     zIndex: 1000,
+    borderRadius: '10px',
+    maxWidth: '90vw', // Ensure the card doesn't exceed the viewport width
+    maxHeight: '90vh', // Ensure the card doesn't exceed the viewport height
+    overflow: 'auto',  // Handle overflow if photo is larger
+  },
+  cardImage: {
+    width: '100%',
+    height: 'auto',
+    maxWidth: '100%',  // Ensure the image doesn't exceed the card width
+    maxHeight: '70vh', // Adjust the height to leave space for buttons
+    marginBottom: '20px',
+    borderRadius: '10px',
+  },
+  cardActions: {
+    display: 'flex',
+    justifyContent: 'space-around',
+  },
+  button: {
+    backgroundColor: '#007bff',
+    color: 'white',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+  },
+  buttonHover: {
+    backgroundColor: '#0056b3',
   },
   closeButton: {
-    display: 'block',
-    marginTop: '10px',
-    background: '#f5f5f5',
+    marginLeft: '10px',
+    backgroundColor: '#f5f5f5',
     border: '1px solid #ccc',
     borderRadius: '5px',
     cursor: 'pointer',
     padding: '5px 10px',
   },
 };
+
 
 export default PhotoGallery;

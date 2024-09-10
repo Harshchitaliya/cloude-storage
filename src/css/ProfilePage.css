@@ -1,0 +1,49 @@
+.profile-container {
+    width: 50%;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    text-align: center;
+  }
+  
+  .profile-info p {
+    font-size: 18px;
+    margin: 10px 0;
+  }
+  
+  .profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .profile-form div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  input {
+    padding: 8px;
+    width: 60%;
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: white;
+    font-size: 16px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
