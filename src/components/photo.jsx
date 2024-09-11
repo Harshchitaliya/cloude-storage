@@ -1,6 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase'; // Import your Firebase config
+
+// Utility function to check if the file is a photo
+const isPhoto = (filename) => {
+  const photoExtensions = ['jpg', 'jpeg', 'png', 'gif']; // Add more image formats if needed
+  const extension = filename.split('.').pop().toLowerCase();
+  return photoExtensions.includes(extension);
+};
 
 const fetchPhotos = async (uid) => {
   try {
@@ -17,17 +24,19 @@ const fetchPhotos = async (uid) => {
       }
     }));
 
-    return photoURLs.filter(photo => photo !== null);
+    // Filter the items to only include photo files
+    return photoURLs.filter(photo => photo !== null && isPhoto(photo.name));
   } catch (error) {
     console.error('Error fetching photos:', error);
     return [];
   }
 };
 
+
 const PhotoGallery = () => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(null); // Tracks which menu is open
 
   useEffect(() => {
     const storedUID = localStorage.getItem('uid');
@@ -41,50 +50,53 @@ const PhotoGallery = () => {
     }
   }, []);
 
-  const handlePhotoClick = (photo) => {
-    setSelectedPhoto(photo);
+  const handleDownload = (photo) => {
+    const link = document.createElement('a');
+    link.href = photo.url;
+    link.download = photo.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleDownload = () => {
-    if (selectedPhoto) {
-      const link = document.createElement('a');
-      link.href = selectedPhoto.url;
-      link.download = selectedPhoto.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleShare = (photo) => {
+    navigator.share({
+      title: 'Check out this photo',
+      url: photo.url,
+    }).catch(console.error);
+  };
+
+  const handleCopyLink = (photo) => {
+    navigator.clipboard.writeText(photo.url)
+      .then(() => alert('Link copied to clipboard'))
+      .catch(console.error);
+  };
+
+  const handleDelete = async (photo) => {
+    try {
+      const photoRef = ref(storage, `users/${localStorage.getItem('uid')}/${photo.name}`);
+      await deleteObject(photoRef);
+      setPhotos(photos.filter(p => p.name !== photo.name));
+    } catch (error) {
+      console.error('Error deleting photo:', error);
     }
   };
 
-  const handleShare = () => {
-    if (selectedPhoto) {
-      navigator.share({
-        title: 'Check out this photo',
-        url: selectedPhoto.url,
-      }).catch(console.error);
-    }
+  const toggleMenu = (e, photo) => {
+    e.stopPropagation(); // Prevents the event from closing the menu when clicking on the three dots
+    setMenuOpen(menuOpen === photo.name ? null : photo.name); // Toggle the menu for a specific photo
   };
 
-  const handleCopyLink = () => {
-    if (selectedPhoto) {
-      navigator.clipboard.writeText(selectedPhoto.url)
-        .then(() => alert('Link copied to clipboard'))
-        .catch(console.error);
-    }
+  const closeMenu = () => {
+    setMenuOpen(null); // Close the menu when clicking outside
   };
 
-  const handleDelete = async () => {
-    if (selectedPhoto) {
-      try {
-        const photoRef = ref(storage, `users/${localStorage.getItem('uid')}/${selectedPhoto.name}`);
-        await deleteObject(photoRef);
-        setPhotos(photos.filter(photo => photo.name !== selectedPhoto.name));
-        setSelectedPhoto(null);
-      } catch (error) {
-        console.error('Error deleting photo:', error);
-      }
-    }
-  };
+  useEffect(() => {
+    window.addEventListener('click', closeMenu);
+    return () => {
+      window.removeEventListener('click', closeMenu);
+    };
+  }, []);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -94,32 +106,31 @@ const PhotoGallery = () => {
     <div style={styles.container}>
       <div style={styles.galleryContainer}>
         {photos.length > 0 ? photos.map((photo, index) => (
-          <div
-            key={index}
-            style={styles.photoContainer}
-            onClick={() => handlePhotoClick(photo)}
-          >
+          <div key={index} style={styles.photoContainer}>
+            {/* Photo */}
             <img src={photo.url} alt={`Photo ${index}`} style={styles.photo} />
+
+            {/* Triple Dot Menu */}
+            <div style={styles.tripleDot} onClick={(e) => toggleMenu(e, photo)}>
+              &#x22EE;
+            </div>
+
+            {/* Dropdown Menu */}
+            {menuOpen === photo.name && (
+              <div className="menu" style={styles.menu} onClick={(e) => e.stopPropagation()}>
+                <button style={styles.menuItem} onClick={() => handleShare(photo)}>Share</button>
+                <button style={styles.menuItem} onClick={() => handleCopyLink(photo)}>Copy Link</button>
+                <button style={styles.menuItem} onClick={() => handleDownload(photo)}>Download</button>
+                <button style={{ ...styles.menuItem, ...styles.deleteButton }} onClick={() => handleDelete(photo)}>Delete</button>
+              </div>
+            )}
+
             <div style={styles.overlay}>
               <p style={styles.photoName}>{photo.name}</p>
             </div>
           </div>
         )) : <p>No photos available</p>}
       </div>
-
-      {selectedPhoto && (
-        <div style={styles.card}>
-          <img src={selectedPhoto.url} alt="Selected" style={styles.cardImage} />
-          <p style={styles.photoName}>Photo Name: {selectedPhoto.name}</p>
-          <div style={styles.cardActions}>
-            <button style={styles.button} onClick={handleDownload}>Download</button>
-            <button style={styles.button} onClick={handleShare}>Share</button>
-            <button style={styles.button} onClick={handleCopyLink}>Copy Link</button>
-            <button style={styles.button} onClick={handleDelete}>Delete</button>
-            <button style={styles.closeButton} onClick={() => setSelectedPhoto(null)}>Close</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -130,78 +141,74 @@ const styles = {
   },
   galleryContainer: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '10px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+    gap: '15px',
   },
   photoContainer: {
     position: 'relative',
-    cursor: 'pointer',
     overflow: 'hidden',
+    backgroundColor: '#f8f9fa',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    borderRadius: '12px',
+    height: '300px',
+    width: '100%',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+  },
+  tripleDot: {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    zIndex: 1,
+    cursor: 'pointer',
+    fontSize: '24px',
+  },
+  menu: {
+    position: 'absolute',
+    top: '40px',
+    right: '10px',
+    zIndex: 2,
+    background: '#fff',
+    border: '1px solid #ccc',
+    borderRadius: '8px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    padding: '0',
+    width: '180px', // Adjusted for better fit
+  },
+  menuItem: {
+    width: '100%',
+    padding: '12px 20px',
+    textAlign: 'left',
+    background: '#fff',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    fontSize: '15px', // Larger text for readability
+    borderBottom: '1px solid #eee',
+    color: '#333', // Darker text color for visibility
+  },
+  deleteButton: {
+    color: 'red',
+    fontWeight: 'bold',
   },
   photo: {
     width: '100%',
-    height: 'auto',
-    borderRadius: '10px',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: '12px',
   },
   overlay: {
     position: 'absolute',
     bottom: '0',
-    background: 'rgba(0, 0, 0, 0.5)',
+    background: 'rgba(0, 0, 0, 0.6)',
     color: '#fff',
     width: '100%',
     textAlign: 'center',
-    padding: '5px',
+    padding: '10px',
+    fontSize: '16px',
   },
   photoName: {
     margin: 0,
   },
-  card: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: '#fff',
-    padding: '20px',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
-    zIndex: 1000,
-    borderRadius: '10px',
-    maxWidth: '90vw', // Ensure the card doesn't exceed the viewport width
-    maxHeight: '90vh', // Ensure the card doesn't exceed the viewport height
-    overflow: 'auto',  // Handle overflow if photo is larger
-  },
-  cardImage: {
-    width: '100%',
-    height: 'auto',
-    maxWidth: '100%',  // Ensure the image doesn't exceed the card width
-    maxHeight: '70vh', // Adjust the height to leave space for buttons
-    marginBottom: '20px',
-    borderRadius: '10px',
-  },
-  cardActions: {
-    display: 'flex',
-    justifyContent: 'space-around',
-  },
-  button: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-  },
-  buttonHover: {
-    backgroundColor: '#0056b3',
-  },
-  closeButton: {
-    marginLeft: '10px',
-    backgroundColor: '#f5f5f5',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    padding: '5px 10px',
-  },
 };
-
 
 export default PhotoGallery;
