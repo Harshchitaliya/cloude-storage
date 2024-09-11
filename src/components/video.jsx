@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
+import React, { useEffect, useState, useRef } from 'react';
+import { ref, listAll, getDownloadURL, deleteObject, uploadBytesResumable } from 'firebase/storage';
 import { storage } from './firebase'; // Import your Firebase config
 
 // Utility function to filter files by type
@@ -36,6 +36,7 @@ const Video = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [menuOpen, setMenuOpen] = useState(null); // Tracks which menu is open
+  const menuRef = useRef(null); // Ref for the menu
 
   useEffect(() => {
     const storedUID = localStorage.getItem('uid');
@@ -48,6 +49,19 @@ const Video = () => {
     } else {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const handleMediaClick = (media) => {
@@ -82,15 +96,36 @@ const Video = () => {
     }
   };
 
-  const handleDelete = async (media) => {
+  const handleDelete = async (video) => {
     try {
-      const mediaRef = ref(storage, `users/${localStorage.getItem('uid')}/${media.name}`);
-      await deleteObject(mediaRef);
-      setVideos(videos.filter(v => v.name !== media.name));
+      const uid = localStorage.getItem('uid');
+      const videoRef = ref(storage, `users/${uid}/${video.name}`);
+      const recycleBinRef = ref(storage, `users/${uid}/recycle_bin/${video.name}`);
+  
+      // Step 1: Fetch the media file as a blob
+      const response = await fetch(video.url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch media file');
+      }
+      const blob = await response.blob();
+  
+      // Step 2: Upload the media file to the recycle bin
+      const uploadResult = await uploadBytesResumable(recycleBinRef, blob);
+      console.log('Media file copied to recycle bin:', uploadResult);
+  
+      // Step 3: Delete the original media file
+      await deleteObject(videoRef);
+      console.log('Original media file deleted:', video.name);
+  
+      // Update state to reflect the deleted video
+      setVideos(videos.filter(v => v.name !== video.name));
     } catch (error) {
-      console.error('Error deleting media:', error);
+      console.error('Error deleting media file:', error);
     }
   };
+  
+  
+  
 
   const toggleMenu = (media) => {
     setMenuOpen(menuOpen === media.name ? null : media.name); // Toggles the menu for a specific media
@@ -111,7 +146,7 @@ const Video = () => {
               <video src={video.url} controls style={styles.media} />
               <div style={styles.tripleDot} onClick={() => toggleMenu(video)}>&#x22EE;</div>
               {menuOpen === video.name && (
-                <div style={styles.menu}>
+                <div ref={menuRef} style={styles.menu}>
                   <button style={styles.menuItem} onClick={handleShare}>Share</button>
                   <button style={styles.menuItem} onClick={handleCopyLink}>Copy Shareable Link</button>
                   <button style={styles.menuItem} onClick={handleDownload}>Download</button>
@@ -161,21 +196,22 @@ const styles = {
     top: '40px',
     right: '10px',
     zIndex: 2,
-    background: '#fff',
-    border: '1px solid #ccc',
+    background: '#333', // Dark background for contrast
+    border: '1px solid #444', // Slightly lighter border
     borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Darker shadow for better visibility
     padding: '0',
     width: '160px',
   },
   menuItem: {
     padding: '10px 20px',
     textAlign: 'left',
-    background: '#fff',
+    background: '#333', // Same background as menu for consistency
     border: 'none',
     cursor: 'pointer',
     fontSize: '14px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid #444', // Same as menu border
+    color: '#fff', // White text color for visibility
   },
   deleteButton: {
     color: 'red',

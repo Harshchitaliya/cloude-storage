@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from './firebase'; // Import your Firebase config
+import { storage } from './firebase';
+import {   uploadBytesResumable } from 'firebase/storage';
 
 // Utility function to check if the file is a photo
 const isPhoto = (filename) => {
-  const photoExtensions = ['jpg', 'jpeg', 'png', 'gif']; // Add more image formats if needed
+  const photoExtensions = ['jpg', 'jpeg', 'png', 'gif'];
   const extension = filename.split('.').pop().toLowerCase();
   return photoExtensions.includes(extension);
 };
@@ -24,14 +25,12 @@ const fetchPhotos = async (uid) => {
       }
     }));
 
-    // Filter the items to only include photo files
     return photoURLs.filter(photo => photo !== null && isPhoto(photo.name));
   } catch (error) {
     console.error('Error fetching photos:', error);
     return [];
   }
 };
-
 
 const PhotoGallery = () => {
   const [photos, setPhotos] = useState([]);
@@ -49,6 +48,35 @@ const PhotoGallery = () => {
       setLoading(false);
     }
   }, []);
+
+ 
+
+  const handleDelete = async (photo) => {
+    try {
+      const uid = localStorage.getItem('uid');
+      const photoRef = ref(storage, `users/${uid}/${photo.name}`);
+      const recycleBinRef = ref(storage, `users/${uid}/recycle_bin/${photo.name}`);
+  
+      // Step 1: Download the photo content
+      const response = await fetch(photo.url,{mode:'no-cors'});
+      const blob = await response.blob();
+  
+      // Step 2: Upload the photo to the recycle bin
+      const uploadResult = await uploadBytesResumable(recycleBinRef, blob);
+      console.log('Photo copied to recycle bin:', uploadResult);
+  
+      // Step 3: Delete the original photo
+      await deleteObject(photoRef);
+      console.log('Original photo deleted:', photo.name);
+  
+      // Update the state to remove the deleted photo
+      setPhotos(photos.filter(p => p.name !== photo.name));
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+    }
+  };
+  
+  
 
   const handleDownload = (photo) => {
     const link = document.createElement('a');
@@ -72,23 +100,13 @@ const PhotoGallery = () => {
       .catch(console.error);
   };
 
-  const handleDelete = async (photo) => {
-    try {
-      const photoRef = ref(storage, `users/${localStorage.getItem('uid')}/${photo.name}`);
-      await deleteObject(photoRef);
-      setPhotos(photos.filter(p => p.name !== photo.name));
-    } catch (error) {
-      console.error('Error deleting photo:', error);
-    }
-  };
-
   const toggleMenu = (e, photo) => {
-    e.stopPropagation(); // Prevents the event from closing the menu when clicking on the three dots
-    setMenuOpen(menuOpen === photo.name ? null : photo.name); // Toggle the menu for a specific photo
+    e.stopPropagation();
+    setMenuOpen(menuOpen === photo.name ? null : photo.name);
   };
 
   const closeMenu = () => {
-    setMenuOpen(null); // Close the menu when clicking outside
+    setMenuOpen(null);
   };
 
   useEffect(() => {
@@ -107,15 +125,10 @@ const PhotoGallery = () => {
       <div style={styles.galleryContainer}>
         {photos.length > 0 ? photos.map((photo, index) => (
           <div key={index} style={styles.photoContainer}>
-            {/* Photo */}
             <img src={photo.url} alt={`Photo ${index}`} style={styles.photo} />
-
-            {/* Triple Dot Menu */}
             <div style={styles.tripleDot} onClick={(e) => toggleMenu(e, photo)}>
               &#x22EE;
             </div>
-
-            {/* Dropdown Menu */}
             {menuOpen === photo.name && (
               <div className="menu" style={styles.menu} onClick={(e) => e.stopPropagation()}>
                 <button style={styles.menuItem} onClick={() => handleShare(photo)}>Share</button>
@@ -124,7 +137,6 @@ const PhotoGallery = () => {
                 <button style={{ ...styles.menuItem, ...styles.deleteButton }} onClick={() => handleDelete(photo)}>Delete</button>
               </div>
             )}
-
             <div style={styles.overlay}>
               <p style={styles.photoName}>{photo.name}</p>
             </div>
@@ -172,7 +184,7 @@ const styles = {
     borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     padding: '0',
-    width: '180px', // Adjusted for better fit
+    width: '180px',
   },
   menuItem: {
     width: '100%',
@@ -182,9 +194,9 @@ const styles = {
     border: 'none',
     outline: 'none',
     cursor: 'pointer',
-    fontSize: '15px', // Larger text for readability
+    fontSize: '15px',
     borderBottom: '1px solid #eee',
-    color: '#333', // Darker text color for visibility
+    color: '#333',
   },
   deleteButton: {
     color: 'red',
