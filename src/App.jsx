@@ -9,6 +9,7 @@ import Delete_item from './components/delete';
 import NavBar from './components/Navbar';
 import SignupForm from './components/signup';
 import Logout from './components/logout';
+import Gallary from './components/gallary';
 
 function App() {
   const router = createBrowserRouter([
@@ -21,12 +22,8 @@ function App() {
       element: <><NavBar /><HomePage /></>
     },
     {
-      path: "/Photo",
-      element: <><NavBar /><Photo /></>
-    },
-    {
-      path: "/Video",
-      element: <><NavBar /><Video /></>
+      path: "/Gallary",
+      element: <><NavBar /><Gallary /></>
     },
     {
       path: "/Delete",
