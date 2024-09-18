@@ -112,17 +112,28 @@
 //   };
 
 //   // Load metadata for a specific image (this function is used in openImageModal)
-//   const fetchMetadata = async (image) => {
-//     const metadataRef = ref(storage, `users/${user.uid}/${image.sku}/${image.sku}.json`);
-//     try {
-//       const url = await getDownloadURL(metadataRef);
-//       const response = await fetch(url);
-//       const data = await response.json();
-//       setMetadata(data);
-//     } catch (error) {
-//       setMessage("Failed to load metadata.");
+// // Load metadata for a specific image
+// const fetchMetadata = async (image) => {
+//   const metadataRef = ref(storage, `users/${user.uid}/${image.sku}/${image.sku}.json`);
+//   try {
+//     const url = await getDownloadURL(metadataRef);
+    
+//     // Fetch metadata through your Node.js server
+//     const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`);
+    
+//     if (!response.ok) {
+//       throw new Error('Network response was not ok');
 //     }
-//   };
+    
+//     const data = await response.json();
+//     setMetadata(data);
+//   } catch (error) {
+//     console.error("Error fetching metadata:", error);  // Log error to the console
+//     setMessage("Failed to load metadata.");
+//   }
+// };
+
+
 
 //   // Open modal for editing
 //   const openImageModal = async (image) => {
@@ -262,9 +273,10 @@
 
 import React, { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { ref, uploadBytes, listAll, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytes, listAll, getDownloadURL, deleteObject, copyObject } from "firebase/storage"; // Import copyObject for moving
 import { storage } from "./firebase"; // Your Firebase config
 import '../css/photo.css'; // Import CSS for styling
+
 
 const PhotoModule = () => {
   const [user, setUser] = useState(null);
@@ -278,6 +290,7 @@ const PhotoModule = () => {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null); // For the modal popup
   const [metadata, setMetadata] = useState(null); // To edit the metadata
+  const [newSku, setNewSku] = useState(""); // For changing SKU
   const [message, setMessage] = useState(""); // For success or error messages
 
   const auth = getAuth();
@@ -307,7 +320,6 @@ const PhotoModule = () => {
       const imageRef = ref(storage, `${skuFolder}/${file.name}`);
       const metadataRef = ref(storage, `${skuFolder}/${sku}.json`);
 
-      // Order of fields: title, type, description, price, quantity
       const metadata = {
         title,
         type, 
@@ -355,7 +367,6 @@ const PhotoModule = () => {
       result.prefixes.map(async (skuFolderRef) => {
         const imagesResult = await listAll(skuFolderRef);
 
-        // Get SKU from folder name
         const sku = skuFolderRef.name;
 
         const images = await Promise.all(
@@ -368,55 +379,112 @@ const PhotoModule = () => {
           })
         );
 
-        return images.filter((img) => img !== null); // Filter out nulls
+        return images.filter((img) => img !== null); 
       })
     );
 
     setImages(allImages.flat());
   };
 
-  // Open modal for editing
-  const openImageModal = (image) => {
-    setSelectedImage(image);
-    // Load metadata for editing (placeholder logic for loading metadata)
-    setMetadata({
-      sku: image.sku, // Assuming the SKU is known
-      title,
-      type,
-      description,
-      price,
-      quantity,
-    });
-  };
-
-  // Update metadata if data changes
-  const updateMetadata = async () => {
-    if (!metadata) return;
-
-    const skuFolder = `users/${user.uid}/${metadata.sku}`;
-    const metadataRef = ref(storage, `${skuFolder}/${metadata.sku}.json`);
-
+  // Fetch metadata through Node.js server
+  const fetchMetadata = async (image) => {
+    const metadataRef = ref(storage, `users/${user.uid}/${image.sku}/${image.sku}.json`);
     try {
-      // Remove old metadata JSON file
-      await deleteObject(metadataRef);
-
-      // Add updated metadata JSON file
-      const updatedMetadataBlob = new Blob([JSON.stringify(metadata)], { type: "application/json" });
-      await uploadBytes(metadataRef, updatedMetadataBlob);
-
-      setMessage("Metadata updated successfully!");
-      setSelectedImage(null); // Close modal after update
+      const url = await getDownloadURL(metadataRef);
+      
+      // Fetch metadata through Node.js server
+      const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`);
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const data = await response.json();
+      setMetadata(data);
+      setNewSku(image.sku); // Set current SKU to state for editing
     } catch (error) {
-      setMessage("Failed to update metadata. Please try again.");
+      console.error("Error fetching metadata:", error);
+      setMessage("Failed to load metadata.");
     }
   };
 
+  // Open modal for editing
+  const openImageModal = async (image) => {
+    setSelectedImage(image);
+    await fetchMetadata(image); // Load metadata for editing
+  };
+  const moveImageToNewSku = async () => {
+    if (!metadata || !selectedImage || !newSku) return;
+
+    const oldSkuFolder = `users/${user.uid}/${selectedImage.sku}`;
+    const newSkuFolder = `users/${user.uid}/${newSku}`;
+    const oldImageName = selectedImage.url.split('/').pop().split('?')[0];
+    const oldImageRef = ref(storage, `${oldSkuFolder}/${oldImageName}`);
+    const newImageRef = ref(storage, `${newSkuFolder}/${oldImageName}`);
+    const oldMetadataRef = ref(storage, `${oldSkuFolder}/${selectedImage.sku}.json`);
+
+    console.log(`Old image path: ${oldImageRef.fullPath}`);
+    console.log(`New image path: ${newImageRef.fullPath}`);
+    console.log(`Old metadata path: ${oldMetadataRef.fullPath}`);
+    console.log(`Old image name: ${oldImageName}`);
+
+    try {
+        // Fetch and upload the image
+        const imageResponse = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(selectedImage.url)}`);
+        if (!imageResponse.ok) throw new Error("Failed to fetch image");
+        const imgBlob = await imageResponse.blob();
+        await uploadBytes(newImageRef, imgBlob);
+
+        // Upload metadata
+        const metadataBlob = new Blob([JSON.stringify(metadata)], { type: "application/json" });
+        await uploadBytes(ref(storage, `${newSkuFolder}/${newSku}.json`), metadataBlob);
+
+        // List all items in the old SKU folder
+        const listResult = await listAll(ref(storage, oldSkuFolder));
+        console.log(`Items in old folder: ${listResult.items.map(item => item.fullPath)}`);
+        const photoCount = listResult.items.length;
+
+        // Handle deletion
+        if (photoCount === 1) {
+            try {
+                // Delete all items in the old folder
+                await Promise.all(listResult.items.map(item => deleteObject(item)));
+                // Optionally delete metadata.json file
+                try {
+                    await deleteObject(oldMetadataRef);
+                } catch (metadataDeleteError) {
+                    console.error(`Error deleting old metadata:`, metadataDeleteError);
+                }
+            } catch (deleteError) {
+                console.error(`Error deleting old items:`, deleteError);
+            }
+        } else {
+            try {
+                await deleteObject(oldImageRef);
+            } catch (deleteError) {
+                console.error("Error deleting old image:", deleteError);
+            }
+        }
+
+        setMessage("Image and SKU updated successfully!");
+        setSelectedImage(null); // Close modal after update
+        displayUserImages(user.uid); // Refresh the image list
+    } catch (error) {
+        console.error("Error moving image:", error);
+        setMessage("Failed to move image. Please try again.");
+    }
+};
+
+
+
+
+  
   return (
     <div className="photo-module">
       {user ? (
         <>
           <h1>Upload Image</h1>
-          {message && <p className="message">{message}</p>} {/* Display messages */}
+          {message && <p className="message">{message}</p>} 
           <div className="upload-container">
             <input type="file" onChange={handleFileChange} />
             <input
@@ -472,42 +540,48 @@ const PhotoModule = () => {
         <h1>Please log in to upload images.</h1>
       )}
 
-      {selectedImage && (
+      {selectedImage && metadata && (
         <div className="modal">
           <div className="modal-content">
             <img src={selectedImage.url} alt="Selected" />
             <h3>Edit Metadata</h3>
             <input
               type="text"
-              value={metadata?.title || ""}
-              onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
+              placeholder="New SKU Number"
+              value={newSku}
+              onChange={(e) => setNewSku(e.target.value)}
+            />
+            <input
+              type="text"
               placeholder="Title"
+              value={metadata.title}
+              onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
             />
             <input
               type="text"
-              value={metadata?.type || ""}
+              placeholder="Type" 
+              value={metadata.type}
               onChange={(e) => setMetadata({ ...metadata, type: e.target.value })}
-              placeholder="Type"
             />
             <input
               type="text"
-              value={metadata?.description || ""}
-              onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
               placeholder="Description"
+              value={metadata.description}
+              onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
             />
             <input
               type="text"
-              value={metadata?.price || ""}
-              onChange={(e) => setMetadata({ ...metadata, price: e.target.value })}
               placeholder="Price"
+              value={metadata.price}
+              onChange={(e) => setMetadata({ ...metadata, price: e.target.value })}
             />
             <input
               type="text"
-              value={metadata?.quantity || ""}
-              onChange={(e) => setMetadata({ ...metadata, quantity: e.target.value })}
               placeholder="Quantity"
+              value={metadata.quantity}
+              onChange={(e) => setMetadata({ ...metadata, quantity: e.target.value })}
             />
-            <button onClick={updateMetadata}>Save Changes</button>
+            <button onClick={moveImageToNewSku}>Update SKU and Save</button>
             <button onClick={() => setSelectedImage(null)}>Close</button>
           </div>
         </div>
