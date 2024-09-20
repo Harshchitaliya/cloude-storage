@@ -1,19 +1,33 @@
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch'); // You may need to install node-fetch if using older Node.js versions
+const fetch = require('node-fetch');
+const admin = require('firebase-admin');
+const { getStorage } = require('firebase-admin/storage');
 
 const app = express();
-const PORT = process.env.PORT || 5001;  // Changed to 5001
+const PORT = process.env.PORT || 5001;
 
+// Initialize Firebase Admin SDK (ensure you replace with your credentials)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(), // Replace with your credentials if needed
+    storageBucket: 'gs://gem-vi.appspot.com', // Replace with your bucket name
+  });
+}
+
+const bucket = getStorage().bucket();
+
+// Middleware
 app.use(cors({
-    origin: 'http://localhost:3000',  // Replace with your frontend URL
+  origin: 'http://localhost:3000',  // Replace with your frontend URL
 }));
+app.use(express.json());  // To parse JSON bodies
 
+// Route to fetch metadata from Firebase Storage
 app.get('/fetch-metadata', async (req, res) => {
   const { url } = req.query;
 
   try {
-    // Fetch the data from the Firebase Storage URL
     const response = await fetch(url);
     const data = await response.json();
     res.json(data);
@@ -23,15 +37,14 @@ app.get('/fetch-metadata', async (req, res) => {
   }
 });
 
-// New route to fetch image
+// Route to fetch an image from Firebase Storage
 app.get('/fetch-image', async (req, res) => {
   const { url } = req.query;
 
   try {
-    // Fetch the image from the Firebase Storage URL
     const response = await fetch(url);
     const buffer = await response.buffer();
-    res.set('Content-Type', 'image/png'); // Adjust content type if necessary
+    res.set('Content-Type', 'image/png');  // Adjust the content type as necessary
     res.send(buffer);
   } catch (error) {
     console.error('Error fetching image:', error);
@@ -39,6 +52,8 @@ app.get('/fetch-image', async (req, res) => {
   }
 });
 
+
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
