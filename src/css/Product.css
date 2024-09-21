@@ -1,0 +1,155 @@
+/* Folder grid layout */
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Folder card design */
+.folder-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 250px; /* Fixed height for card */
+}
+
+.folder-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Folder image styling */
+.folder-image-container {
+    width: 100%;
+    height: 100%; /* Full height of the card */
+    overflow: hidden;
+}
+
+.folder-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure the image covers the card */
+}
+
+/* Folder name styling */
+.folder-name {
+    padding: 10px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Folder content and metadata layout */
+.folder-content-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 60px; /* Increased gap between media content and metadata */
+}
+
+/* Media content on the left */
+.media-content {
+    flex: 2;
+    margin-right: 60px; /* Adjusted margin */
+}
+
+.main-image {
+    width: 100%;
+    max-width: 700px; /* Increased max-width */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 8px;
+    margin-bottom: 20px; /* Increased margin */
+}
+
+.thumbnail-container {
+    display: flex;
+    gap: 15px; /* Increased gap */
+}
+
+.thumbnail-image {
+    width: 120px; /* Increased size */
+    height: 120px; /* Increased size */
+    border-radius: 5px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.thumbnail-image:hover {
+    transform: scale(1.1);
+}
+
+/* Metadata content on the right */
+.metadata-content {
+    flex: 1;
+    max-width: 400px; /* Increased width */
+    padding: 30px; /* Increased padding */
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: auto; /* Allow height to grow with content */
+    overflow: auto; /* Ensure scrolling if content exceeds height */
+}
+
+.metadata-content h3 {
+    margin-bottom: 20px; /* Increased margin */
+    font-size: 1.8em; /* Increased font size */
+    font-weight: 600;
+}
+
+.metadata-content label {
+    display: block;
+    margin-bottom: 15px; /* Increased margin */
+    font-weight: 500;
+}
+
+.metadata-content input {
+    width: 100%;
+    padding: 12px; /* Increased padding */
+    margin-bottom: 20px; /* Increased margin */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.metadata-content input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.metadata-content button {
+    padding: 12px 18px; /* Increased padding */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.metadata-content button:hover {
+    background-color: #0056b3;
+}
+
+/* Back button styling */
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: url('https://img.icons8.com/?size=100&id=26194&format=png&color=000000') no-repeat center center;
+    background-size: contain;
+    width: 40px; /* Adjusted size */
+    height: 40px; /* Adjusted size */
+    border: none;
+    cursor: pointer;
+    z-index: 1000; /* Ensure the button is on top */
+}
+
+/* Adjustments for Navbar to avoid overlap */
+.navbar {
+    position: relative;
+    z-index: 999; /* Ensure navbar is below the back button */
+}

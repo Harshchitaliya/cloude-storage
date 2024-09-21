@@ -2,14 +2,14 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import LoginForm from './components/login';
 import HomePage from './components/home';
-import Video from './components/video';
-import Photo from './components/photo';
 import Profile from './components/profile';
 import Delete_item from './components/delete';
 import NavBar from './components/Navbar';
 import SignupForm from './components/signup';
 import Logout from './components/logout';
 import Gallary from './components/gallary';
+import Product from './components/product';
+
 
 function App() {
   const router = createBrowserRouter([
@@ -40,6 +40,10 @@ function App() {
     {
       path: "/Logout",
       element: <><NavBar /><Logout /></>
+    },
+    {
+      path: "/Product",
+      element: <><NavBar /><Product /></>
     },
   ]);
 
