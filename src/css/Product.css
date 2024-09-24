@@ -1,7 +1,7 @@
-/* Folder grid layout */
+/* Base styles for the folder grid layout */
 .folder-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ensures responsive grid */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive grid */
     gap: 2%; /* Use percentage-based gap */
     padding: 2%; /* Use percentage for padding */
 }
@@ -10,25 +10,25 @@
 .folder-card {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
-    border-radius: 1%; /* Use relative units for better scaling */
+    border-radius: 1%;
     overflow: hidden;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for a raised effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease-in-out;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 300px; /* Set fixed height for uniformity */
+    height: 300px; /* Fixed height for uniformity */
 }
 
 .folder-card:hover {
     transform: translateY(-5px);
 }
 
-/* Folder image and video container */
+/* Folder image container */
 .folder-image-container {
     width: 100%;
-    height: 80%; /* Ensures a consistent height for both images and videos */
+    height: 80%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,35 +37,12 @@
     overflow: hidden;
 }
 
-/* Folder image styling */
-.folder-image {
+/* Styling for images and videos */
+.folder-image,
+.folder-thumbnail {
     max-width: 100%;
     max-height: 100%;
     object-fit: cover; /* Ensures the image fits without distorting */
-    height: 100%; /* Ensures the image fills the available space */
-}
-
-/* Video thumbnail styling */
-.folder-thumbnail {
-    max-width: 100%;
-    height: 100%;
-    object-fit: cover; /* Ensures the video thumbnail fits the container */
-}
-
-.thumbnail-video {
-    width: 100%; /* Ensure video takes full width */
-    max-height: 100%; /* Adjust video height */
-    object-fit: cover;
-    cursor: pointer;
-    border: 1px solid #ddd;
-}
-
-.thumbnail-image {
-    width: 100%; /* Ensure image takes full width */
-    max-height: 100%; /* Adjust image height */
-    object-fit: cover;
-    cursor: pointer;
-    border: 1px solid #ddd;
 }
 
 /* Folder name styling */
@@ -82,14 +59,18 @@
     flex-direction: row;
     gap: 20px;
     padding: 20px;
+    overflow: hidden; /* Prevent horizontal overflow */
 }
 
+/* Adjusted flex properties for media and metadata */
 .media-content {
     flex: 2; /* Media content takes more space */
+    overflow-y: auto; /* Allow vertical scrolling if needed */
 }
 
 .metadata-content {
     flex: 1; /* Metadata takes less space */
+    max-width: 300px; /* Optional: set a max width for the metadata section */
 }
 
 /* Main media display */
@@ -107,13 +88,14 @@
     display: flex;
     gap: 10px;
     margin-top: 10px;
-    overflow-x: auto; /* Horizontal scroll for thumbnails */
+    overflow-x: auto; /* Allow horizontal scroll for thumbnails */
 }
 
+/* Thumbnail dimensions */
 .thumbnail-video,
 .thumbnail-image {
-    width: 100px; /* Set consistent width */
-    height: 100px; /* Set consistent height */
+    width: 100px; /* Adjusted width */
+    height: 100px; /* Adjusted height */
     cursor: pointer;
     border-radius: 5px;
     border: 2px solid transparent;
@@ -164,29 +146,6 @@
 /* Back button styling */
 .back-button {
     padding: 8px 12px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-bottom: 15px;
-}
-
-.back-button:hover {
-    background-color: #d32f2f;
-}
-
-/* Loading and error message styling */
-.loading-message, .error-message {
-    font-size: 1.5em;
-    color: #555;
-    text-align: center;
-    margin-top: 50px;
-}
-
-/* Back button styling */
-.back-button {
-    padding: 8px 12px;
     background-color: #ffffff; /* Google-like white background */
     color: #4285f4; /* Google blue color */
     border: 1px solid #4285f4; /* Blue border */
@@ -207,4 +166,69 @@
 .back-button:focus {
     outline: none; /* Remove default outline */
     box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.5); /* Google blue outline */
+}
+
+/* Loading and error message styling */
+.loading-message,
+.error-message {
+    font-size: 1.5em;
+    color: #555;
+    text-align: center;
+    margin-top: 50px;
+}
+
+/* Responsive styles for different devices */
+@media (max-width: 1200px) {
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust for medium screens */
+    }
+
+    .folder-card {
+        height: 250px; /* Reduced height for smaller screens */
+    }
+
+    .main-image,
+    .main-video {
+        height: 400px; /* Reduced height for smaller screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Adjust for smaller screens */
+    }
+
+    .folder-card {
+        height: 200px; /* Further reduced height for small devices */
+    }
+
+    .main-image,
+    .main-video {
+        height: 300px; /* Further reduced height for small devices */
+    }
+
+    .metadata-content {
+        max-width: 100%; /* Full width for metadata section on small devices */
+    }
+}
+
+@media (max-width: 480px) {
+    .folder-name {
+        font-size: 1em; /* Smaller font size for mobile */
+    }
+
+    .thumbnail-video,
+    .thumbnail-image {
+        width: 80px; /* Smaller thumbnail for mobile */
+        height: 80px; /* Smaller thumbnail for mobile */
+    }
+
+    .folder-card {
+        height: 180px; /* Reduced height for mobile devices */
+    }
+
+    .main-image,
+    .main-video {
+        height: 250px; /* Reduced height for mobile devices */
+    }
 }
