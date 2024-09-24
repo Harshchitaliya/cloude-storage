@@ -245,8 +245,8 @@ const Product = () => {
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [folderContent, setFolderContent] = useState([]);
-  const [mainImage, setMainImage] = useState('');
-  const [metadata, setMetadata] = useState({ title: '', description: '', price: '', quantity: '', type: '' });
+  const [mainMedia, setMainMedia] = useState({ url: '', type: 'image' });
+  const [metadata, setMetadata] = useState({ title: '', description: '', price: 0, quantity: 0, type: '' });
 
   const storage = getStorage();
   const auth = getAuth();
@@ -272,18 +272,26 @@ const Product = () => {
       .then((result) => {
         const folderPromises = result.prefixes.map((folderRef) => {
           return listAll(folderRef).then((items) => {
-            if (items.items.length > 0) {
-              return getDownloadURL(items.items[0])
-                .then((url) => ({
-                  name: folderRef.name,
-                  thumbnail: url,
-                }))
+            const mediaItem = items.items.find((item) =>
+              item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
+            );
+
+            if (mediaItem) {
+              return getDownloadURL(mediaItem)
+                .then((url) => {
+                  const isVideo = /\.(mov|mp4)$/i.test(mediaItem.name);
+                  return {
+                    name: folderRef.name,
+                    thumbnail: isVideo ? url : url, // Use URL as the thumbnail for videos for now
+                    isVideo, // Video files will use the same URL for display
+                  };
+                })
                 .catch((error) => {
-                  console.error('Error fetching image URL:', error);
-                  return { name: folderRef.name, thumbnail: '' };
+                  console.error('Error fetching media URL:', error);
+                  return { name: folderRef.name, thumbnail: '', isVideo: false };
                 });
             } else {
-              return { name: folderRef.name, thumbnail: '' };
+              return { name: folderRef.name, thumbnail: '', isVideo: false };
             }
           });
         });
@@ -301,35 +309,35 @@ const Product = () => {
 
   const handleFolderClick = (folderName) => {
     const folderRef = ref(storage, `users/${user.uid}/${folderName}/`);
-
+  
     listAll(folderRef)
       .then((result) => {
         const filePromises = result.items
-          .filter((itemRef) => !itemRef.name.endsWith('.json')) // Filter out JSON files
+          .filter((itemRef) => !itemRef.name.endsWith('.json'))
           .map((itemRef) => {
             return getDownloadURL(itemRef)
               .then((url) => ({
                 name: itemRef.name,
                 url,
+                type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
               }))
               .catch((error) => {
                 console.error('Error fetching file URL:', error);
-                return { name: itemRef.name, url: '' };
+                return { name: itemRef.name, url: '', type: 'image' };
               });
           });
-
+  
         Promise.all(filePromises).then((files) => {
           setFolderContent(files);
-          setMainImage(files[0]?.url || ''); // Set the first image as the main image
+          setMainMedia(files[0] || { url: '', type: 'image' }); // Set the first file as main media
         });
-
+  
         const metadataFileRef = ref(storage, `users/${user.uid}/${folderName}/${folderName}.json`);
         getDownloadURL(metadataFileRef)
           .then((url) => {
             fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`)
               .then((response) => response.json())
               .then((data) => {
-                console.log('Metadata loaded:', data);
                 setMetadata(data);
               })
               .catch((error) => {
@@ -345,7 +353,7 @@ const Product = () => {
       .catch((error) => {
         console.error('Error listing folder content: ', error);
       });
-
+  
     setSelectedFolder(folderName);
   };
 
@@ -371,6 +379,10 @@ const Product = () => {
       });
   };
 
+  const handleBackButtonClick = () => {
+    setSelectedFolder(null);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -381,16 +393,29 @@ const Product = () => {
 
   return (
     <div>
-      {/* Back Button */}
-      <button className="back-button" onClick={() => window.history.back()} />
+      {selectedFolder && (
+      <button className="back-button" onClick={() => setSelectedFolder(null)}>
+        Back
+      </button>
+    )}
 
-      {/* Folders Grid */}
       {!selectedFolder ? (
         <div className="folder-grid">
           {folders.map((folder) => (
             <div key={folder.name} className="folder-card" onClick={() => handleFolderClick(folder.name)}>
               <div className="folder-image-container">
-                <img src={folder.thumbnail} alt={folder.name} className="folder-image" />
+                {folder.isVideo ? (  
+                  <video
+                    src={folder.thumbnail}
+                    className="folder-video-thumbnail"
+                    muted
+                    autoPlay
+                    loop
+                    poster={folder.thumbnail} // Optional poster image
+                  />
+                ) : (
+                  <img src={folder.thumbnail} alt={folder.name} className="folder-image" />
+                )}
               </div>
               <div className="folder-name">{folder.name}</div>
             </div>
@@ -398,17 +423,33 @@ const Product = () => {
         </div>
       ) : (
         <div className="folder-content-container">
+          
           <div className="media-content">
-            <img src={mainImage} alt="Main" className="main-image" />
+            {mainMedia.type === 'video' ? (
+              <video src={mainMedia.url} controls className="main-video" />
+            ) : (
+              <img src={mainMedia.url} alt="Main" className="main-image" />
+            )}
             <div className="thumbnail-container">
               {folderContent.map((file) => (
-                <img
-                  key={file.name}
-                  src={file.url}
-                  alt={file.name}
-                  className="thumbnail-image"
-                  onClick={() => setMainImage(file.url)}
-                />
+                file.type === 'video' ? (
+                  <video
+                    key={file.name}
+                    src={file.url}
+                    className="thumbnail-video"
+                    onClick={() => setMainMedia(file)}
+                    poster={file.url}
+                    muted
+                  />
+                ) : (
+                  <img
+                    key={file.name}
+                    src={file.url}
+                    alt={file.name}
+                    className="thumbnail-image"
+                    onClick={() => setMainMedia(file)}
+                  />
+                )
               ))}
             </div>
           </div>
