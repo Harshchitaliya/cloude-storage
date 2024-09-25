@@ -1,0 +1,212 @@
+/* General container styling */
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  /* Folder card container */
+  .folder-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .folder-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Thumbnail container and image */
+  .folder-image-container {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .folder-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Folder name text */
+  .folder-name {
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    padding: 10px 0;
+    text-align: center;
+    width: 100%;
+    background-color: #fff;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  
+  /* Back button */
+  .back-button {
+    display: block;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Folder content container */
+  .folder-content-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  /* Media content section */
+  .media-content {
+    flex: 2;
+  }
+  
+  .main-image, .main-video {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  /* Thumbnails container */
+  .thumbnail-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    overflow-x: auto;
+  }
+  
+  .thumbnail-image, .thumbnail-video {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  
+  .thumbnail-image:hover, .thumbnail-video:hover {
+    transform: scale(1.05);
+    border-color: #007bff;
+  }
+  
+  /* Metadata content section */
+  .metadata-content {
+    flex: 1;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .metadata-content h3 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .metadata-content label {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+  }
+  
+  .metadata-content input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .save-button {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .save-button:hover {
+    background-color: #218838;
+  }
+  
+  /* Utility classes */
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+  
+  button:focus {
+    outline: none;
+  }
+  
+  /* Video styling */
+  .main-video {
+    width: 100%;
+    max-height: 600px;
+    border-radius: 8px;
+  }
+  
+  .thumbnail-video {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: transform 0.2s ease;
+  }
+  
+  .thumbnail-video:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .folder-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 10px;
+    }
+  
+    .folder-content-container {
+      flex-direction: column;
+    }
+  
+    .media-content {
+      margin-bottom: 20px;
+    }
+  
+    .metadata-content {
+      padding: 15px;
+    }
+  }
+  
