@@ -1,77 +1,189 @@
 .photo-module {
-    padding: 20px;
-  }
-  
-  .upload-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .upload-container input {
-    padding: 10px;
-    width: 100%;
-    max-width: 400px;
-    margin-bottom: 10px;
-  }
-  
-  .upload-container button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    width: 100px;
-  }
-  
-  .image-gallery {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  
+  max-width: 100%;
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+h1, h2 {
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.message {
+  color: green;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.upload-container {
+  margin-bottom: 20px;
+}
+
+.upload-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.metadata-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metadata-container input {
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.metadata-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Styling the image gallery for a responsive dynamic layout */
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.image-card {
+  flex: 1 1 200px; /* Allow flexible growth but minimum 200px */
+  max-width: 250px; /* Maximum width of each card */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.image-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 1px solid #ddd;
+}
+
+.image-card p {
+  padding: 15px;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content img {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+.modal-content button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
   .image-card {
-    width: 150px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
+    flex: 1 1 100%; /* On small screens, cards will take up the full width */
+    max-width: 100%;
   }
-  
-  .image-card img {
-    width: 100%;
-    height: auto;
-  }
-  
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 450px;
-    text-align: center;
-  }
-  
+
   .modal-content img {
     max-width: 100%;
-    height: auto;
   }
-  
-  .modal-content input {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-  
+}
+
+/* Styling for the side panel */
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -3px 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.side-panel-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.side-panel-content img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.side-panel-content p {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.side-panel-content button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* When the side panel is not active, slide it out */
+.side-panel-hidden {
+  transform: translateX(100%);
+}
