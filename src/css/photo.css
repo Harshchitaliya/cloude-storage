@@ -1,189 +1,582 @@
+/* General styling for the photo module */
 .photo-module {
-  max-width: 100%;
-  padding: 20px;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-h1, h2 {
-  color: #333;
+  padding: 2rem;
   font-family: Arial, sans-serif;
 }
 
-.message {
-  color: green;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
+/* Upload container styles */
 .upload-container {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .upload-container button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #4CAF50;
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
   color: white;
   border: none;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
 }
 
+.upload-container button:hover {
+  background-color: #0056b3;
+}
+
+/* Metadata input fields */
 .metadata-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 2rem;
 }
 
 .metadata-container input {
-  margin: 10px 0;
-  padding: 10px;
   width: 100%;
   max-width: 400px;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 }
 
 .metadata-container button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #4CAF50;
+  padding: 0.75rem 1.5rem;
+  background-color: #28a745;
   color: white;
   border: none;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
 }
 
-/* Styling the image gallery for a responsive dynamic layout */
+.metadata-container button:hover {
+  background-color: #218838;
+}
+
+/* Image gallery */
 .image-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 20px;
-  width: 100%;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 .image-card {
-  flex: 1 1 200px; /* Allow flexible growth but minimum 200px */
-  max-width: 250px; /* Maximum width of each card */
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
 .image-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .image-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-bottom: 1px solid #ddd;
+  max-width: 100%;
+  border-radius: 10px;
 }
 
 .image-card p {
-  padding: 15px;
-  font-size: 16px;
+  margin-top: 0.5rem;
+  font-size: 1rem;
   color: #333;
-  text-align: center;
-  background-color: #f9f9f9;
-  font-weight: bold;
 }
 
-/* Modal styles */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  max-width: 90%;
-  text-align: center;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-.modal-content img {
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 20px;
-}
-
-.modal-content button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-  .image-card {
-    flex: 1 1 100%; /* On small screens, cards will take up the full width */
-    max-width: 100%;
-  }
-
-  .modal-content img {
-    max-width: 100%;
-  }
-}
-
-/* Styling for the side panel */
+/* Side panel */
 .side-panel {
   position: fixed;
   top: 0;
   right: 0;
-  width: 400px;
+  width: 30%;
   height: 100%;
-  background-color: white;
-  box-shadow: -3px 0 5px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
-}
-
-.side-panel-content {
-  padding: 20px;
+  background-color: #e6e6e6; /* Improved background color */
+  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1rem;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  border-radius: 10px 0 0 10px;
+  transform: translateX(0); /* Adjust this for sliding animation */
 }
 
-.side-panel-content img {
-  max-width: 100%;
-  height: auto;
-  margin-bottom: 20px;
+.side-panel-hidden {
+  transform: translateX(100%);
 }
 
-.side-panel-content p {
-  font-size: 18px;
-  margin-bottom: 10px;
+.side-panel-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Design enhancement */
 }
 
-.side-panel-content button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
+/* Image in the side panel */
+.side-panel img {
+  max-width: 90%;
+  max-height: 60%;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.side-panel input {
+  width: 80%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+}
+
+/* Close button in the side panel */
+.close-button {
+  align-self: flex-end;
+  font-size: 1.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.close-button:hover {
+  color: red;
+}
+
+/* Container for share and more-options buttons */
+.button-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap; /* Ensures buttons stay responsive on smaller screens */
+}
+
+/* Share button */
+/* General styling for the photo module */
+.photo-module {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+/* Upload container styles */
+.upload-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.upload-container button {
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
   color: white;
   border: none;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
 }
 
-/* When the side panel is not active, slide it out */
+.upload-container button:hover {
+  background-color: #0056b3;
+}
+
+/* Metadata input fields */
+.metadata-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.metadata-container input {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.metadata-container button {
+  padding: 0.75rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.metadata-container button:hover {
+  background-color: #218838;
+}
+
+/* Image gallery */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.image-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.image-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.image-card img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.image-card p {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Side panel */
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 30%;
+  height: 100%;
+  background-color: #e6e6e6;
+  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  border-radius: 10px 0 0 10px;
+}
+
 .side-panel-hidden {
   transform: translateX(100%);
+}
+
+.side-panel-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Image in the side panel */
+.side-panel img {
+  max-width: 90%;
+  max-height: 60%;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.side-panel input {
+  width: 80%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+}
+
+/* Close button in the side panel - always visible */
+.close-button {
+  align-self: flex-end;
+  font-size: 1.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #333; /* Always visible */
+}
+
+.close-button:hover {
+  color: red;
+}
+
+/* Container for share and more-options buttons */
+.button-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: nowrap; /* Ensure buttons stay in a single line */
+}
+
+/* Share button */
+.share-button {
+  font-size: 1.2rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  
+}
+
+/* More options button with dropdown */
+.more-options {
+  position: relative;
+  font-size: 1.2rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  
+}
+
+.more-options span {
+  font-size: 1.5rem;
+}
+
+.more-options:hover .dropdown {
+  display: block;
+}
+
+.more-options .dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  z-index: 10;
+  padding: 0.5rem;
+  border-radius: 5px;
+}
+
+.dropdown button {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  padding: 0.5rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Download button */
+.download-button {
+  background-color: #ffc107;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.download-button:hover {
+  background-color: #e0a800;
+}
+
+/* Delete button */
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Message styling */
+.message {
+  color: green;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .side-panel {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .side-panel {
+    width: 80%;
+  }
+
+  .side-panel-content {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-button,
+  .more-options,
+  .download-button,
+  .delete-button {
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .button-container {
+    gap: 0.3rem;
+  }
+}
+
+
+.more-options span {
+  font-size: 1.5rem;
+}
+
+.more-options:hover .dropdown {
+  display: block;
+}
+
+.more-options .dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  z-index: 10;
+  padding: 0.5rem;
+  border-radius: 5px;
+}
+
+.dropdown button {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  padding: 0.5rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Download button */
+.download-button {
+  background-color: #ffc107;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.download-button:hover {
+  background-color: #e0a800;
+}
+
+/* Delete button */
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Message styling */
+.message {
+  color: green;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .side-panel {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .side-panel {
+    width: 80%;
+  }
+
+  .button-container {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .side-panel-content {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-button, .more-options, .download-button, .delete-button {
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .button-container {
+    gap: 0.3rem;
+  }
 }

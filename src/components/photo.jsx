@@ -595,7 +595,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { ref, uploadBytes, listAll, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import '../css/photo.css'; // Import CSS for styling
 
@@ -612,6 +612,7 @@ const PhotoModule = () => {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null); // For the side panel
   const [message, setMessage] = useState(""); // For success or error messages
+  const [sidePanelOpen, setSidePanelOpen] = useState(false); // Track side panel state
 
   const auth = getAuth();
 
@@ -702,7 +703,7 @@ const PhotoModule = () => {
               const url = await getDownloadURL(itemRef);
               // Check if the file is an image with the correct extensions
               if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
-                return { url, sku };
+                return { url, sku, fullPath: itemRef.fullPath };
               }
             }
             return null;
@@ -719,14 +720,58 @@ const PhotoModule = () => {
   // Open side panel to view image and metadata
   const openImagePanel = (image) => {
     setSelectedImage(image);
+    setSidePanelOpen(true); // Open the side panel
+  };
+
+  // Close the side panel
+  const closeSidePanel = () => {
+    setSidePanelOpen(false);
+  };
+
+  // Download image
+  const downloadImage = (url) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "image.jpg";
+    link.click();
+  };
+
+  // Delete image from Firebase Storage
+  const deleteImage = async (image) => {
+    const imageRef = ref(storage, image.fullPath);
+    try {
+      await deleteObject(imageRef);
+      setMessage("Image deleted successfully.");
+      setSidePanelOpen(false); // Close side panel after deletion
+      displayUserImages(user.uid); // Refresh the images
+    } catch (error) {
+      setMessage("Error deleting the image.");
+    }
+  };
+
+  // Share image (using navigator.share API for simplicity)
+  const shareImage = async (url) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Check out this image",
+          text: "Here is an image you might like.",
+          url: url,
+        });
+        setMessage("Image shared successfully.");
+      } catch (error) {
+        setMessage("Sharing failed.");
+      }
+    } else {
+      setMessage("Sharing is not supported on this browser.");
+    }
   };
 
   return (
     <div className="photo-module">
       {user ? (
         <>
-          <h1>Upload Image</h1>
-          {message && <p className="message">{message}</p>} 
+          {message && <p className="message">{message}</p>}
           <div className="upload-container">
             <button onClick={handleUploadClick}>Choose an Image</button>
             <input
@@ -753,7 +798,7 @@ const PhotoModule = () => {
               />
               <input
                 type="text"
-                placeholder="Type" 
+                placeholder="Type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
               />
@@ -795,11 +840,19 @@ const PhotoModule = () => {
 
       {/* Side Panel for showing selected image */}
       {selectedImage && (
-        <div className="side-panel">
+        <div className={`side-panel ${sidePanelOpen ? "" : "side-panel-hidden"}`}>
           <div className="side-panel-content">
+            <button className="close-button" onClick={closeSidePanel}>✖</button>
+            <button className="share-button" onClick={() => shareImage(selectedImage.url)}>Share</button>
+            <button className="more-options">
+              <span>⋮</span>
+              <div className="dropdown">
+                <button className="download-button" onClick={() => downloadImage(selectedImage.url)}>⬇</button>
+                <button className="delete-button" onClick={() => deleteImage(selectedImage)}>🗑</button>
+              </div>
+            </button>
             <img src={selectedImage.url} alt="Selected" />
-            <p><strong>SKU:</strong> {selectedImage.sku}</p>
-            <button onClick={() => setSelectedImage(null)}>Close</button>
+            <input type="text" value={selectedImage.sku} readOnly />
           </div>
         </div>
       )}
