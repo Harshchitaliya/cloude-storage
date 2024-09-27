@@ -1,49 +1,37 @@
-import React, { useState } from 'react';
-import Photo from './photo';  // Component to display photos
-import Video from './video';  // Component to display videos
+import React from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
 
 const Gallary = () => {
-  const [activeTab, setActiveTab] = useState('all'); // Active tab state
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-  };
-
   return (
     <div className="container">
       <h1>Gallery</h1>
       <nav>
         <div className="nav nav-tabs">
-          <button
-            className={`nav-link ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => handleTabClick('all')}
+          {/* Update navigation to use NavLink to the respective routes */}
+          <NavLink
+            to="/Gallary/All"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             All
-          </button>
-          <button
-            className={`nav-link ${activeTab === 'image' ? 'active' : ''}`}
-            onClick={() => handleTabClick('image')}
+          </NavLink>
+          <NavLink
+            to="/Gallary/Photo"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             Image
-          </button>
-          <button
-            className={`nav-link ${activeTab === 'video' ? 'active' : ''}`}
-            onClick={() => handleTabClick('video')}
+          </NavLink>
+          <NavLink
+            to="/Gallary/Video"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             Video
-          </button>
+          </NavLink>
         </div>
       </nav>
 
+      {/* This is where the child routes (all, photo, video) will be rendered */}
       <div className="tab-content mt-4">
-        {activeTab === 'all' && (
-          <>
-            <Photo />
-            <Video />
-          </>
-        )}
-        {activeTab === 'image' && <Photo />}
-        {activeTab === 'video' && <Video />}
+        <Outlet />
       </div>
     </div>
   );

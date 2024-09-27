@@ -1,582 +1,293 @@
-/* General styling for the photo module */
 .photo-module {
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
   font-family: Arial, sans-serif;
 }
 
-/* Upload container styles */
+.message {
+  color: #4caf50;
+  margin-bottom: 20px;
+}
+
+
 .upload-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 }
 
 .upload-container button {
-  padding: 0.75rem 1.5rem;
+  padding: 10px 20px;
+  font-size: 1rem; /* Changed to rem for scalability */
+  border: none;
   background-color: #007bff;
   color: white;
-  border: none;
   border-radius: 5px;
-  font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .upload-container button:hover {
   background-color: #0056b3;
 }
 
-/* Metadata input fields */
 .metadata-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%; /* Set to 100% for responsiveness */
+  max-width: 300px; /* Max width for larger screens */
 }
 
 .metadata-container input {
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
+  padding: 10px;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+  font-size: 16px;
+  text-align: center;
 }
 
 .metadata-container button {
-  padding: 0.75rem 1.5rem;
+  padding: 10px;
   background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
-  font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .metadata-container button:hover {
   background-color: #218838;
 }
 
-/* Image gallery */
 .image-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
+  gap: 20px;
+  width: 100%;
+  padding: 20px 0;
 }
 
 .image-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 1rem;
-  background-color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-}
-
-.image-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.image-card img {
-  max-width: 100%;
-  border-radius: 10px;
-}
-
-.image-card p {
-  margin-top: 0.5rem;
-  font-size: 1rem;
-  color: #333;
-}
-
-/* Side panel */
-.side-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 30%;
-  height: 100%;
-  background-color: #e6e6e6; /* Improved background color */
-  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-  z-index: 1000;
-  transition: transform 0.3s ease;
-  border-radius: 10px 0 0 10px;
-  transform: translateX(0); /* Adjust this for sliding animation */
-}
-
-.side-panel-hidden {
-  transform: translateX(100%);
-}
-
-.side-panel-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Design enhancement */
-}
-
-/* Image in the side panel */
-.side-panel img {
-  max-width: 90%;
-  max-height: 60%;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.side-panel input {
-  width: 80%;
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  text-align: center;
-}
-
-/* Close button in the side panel */
-.close-button {
-  align-self: flex-end;
-  font-size: 1.5rem;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-.close-button:hover {
-  color: red;
-}
-
-/* Container for share and more-options buttons */
-.button-container {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  flex-wrap: wrap; /* Ensures buttons stay responsive on smaller screens */
-}
-
-/* Share button */
-/* General styling for the photo module */
-.photo-module {
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-}
-
-/* Upload container styles */
-.upload-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.upload-container button {
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.upload-container button:hover {
-  background-color: #0056b3;
-}
-
-/* Metadata input fields */
-.metadata-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.metadata-container input {
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-}
-
-.metadata-container button {
-  padding: 0.75rem 1.5rem;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.metadata-container button:hover {
-  background-color: #218838;
-}
-
-/* Image gallery */
-.image-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.image-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 1rem;
-  background-color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-}
-
-.image-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.image-card img {
-  max-width: 100%;
-  border-radius: 10px;
-}
-
-.image-card p {
-  margin-top: 0.5rem;
-  font-size: 1rem;
-  color: #333;
-}
-
-/* Side panel */
-.side-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 30%;
-  height: 100%;
-  background-color: #e6e6e6;
-  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-  z-index: 1000;
-  transition: transform 0.3s ease;
-  border-radius: 10px 0 0 10px;
-}
-
-.side-panel-hidden {
-  transform: translateX(100%);
-}
-
-.side-panel-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Image in the side panel */
-.side-panel img {
-  max-width: 90%;
-  max-height: 60%;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.side-panel input {
-  width: 80%;
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  text-align: center;
-}
-
-/* Close button in the side panel - always visible */
-.close-button {
-  align-self: flex-end;
-  font-size: 1.5rem;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: #333; /* Always visible */
-}
-
-.close-button:hover {
-  color: red;
-}
-
-/* Container for share and more-options buttons */
-.button-container {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  flex-wrap: nowrap; /* Ensure buttons stay in a single line */
-}
-
-/* Share button */
-.share-button {
-  font-size: 1.2rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  
-}
-
-/* More options button with dropdown */
-.more-options {
   position: relative;
-  font-size: 1.2rem;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  height: 250px; /* Fixed height for uniformity */
 }
 
-.more-options span {
+.image-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.image-card img {
+  width: 100%; /* Ensures the image scales with the card */
+  height: 180px; /* Fixed height for all images */
+  object-fit: cover; /* Ensures the image covers the area without distortion */
+  border-radius: 8px; /* Maintain rounded corners */
+  margin-bottom: 10px;
+}
+
+.image-card p {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+  text-align: center; /* Center text in the card */
+}
+
+
+.dropdown {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+.more-options {
+  background: transparent;
+  border: none;
   font-size: 1.5rem;
+  cursor: pointer;
 }
 
-.more-options:hover .dropdown {
-  display: block;
-}
-
-.more-options .dropdown {
+.dropdown-menu {
   display: none;
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  z-index: 10;
-  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid #ddd;
   border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  min-width: 150px;
 }
 
-.dropdown button {
-  background-color: transparent;
-  border: none;
-  color: #333;
-  padding: 0.5rem;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-}
-
-.dropdown button:hover {
-  background-color: #f8f9fa;
-}
-
-/* Download button */
-.download-button {
-  background-color: #ffc107;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.download-button:hover {
-  background-color: #e0a800;
-}
-
-/* Delete button */
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-/* Message styling */
-.message {
-  color: green;
-  font-size: 1rem;
-  text-align: center;
-  margin-top: 1rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .side-panel {
-    width: 50%;
-  }
-}
-
-@media (max-width: 768px) {
-  .side-panel {
-    width: 80%;
-  }
-
-  .side-panel-content {
-    padding: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .share-button,
-  .more-options,
-  .download-button,
-  .delete-button {
-    font-size: 1rem;
-    padding: 0.5rem 0.8rem;
-  }
-
-  .button-container {
-    gap: 0.3rem;
-  }
-}
-
-
-.more-options span {
-  font-size: 1.5rem;
-}
-
-.more-options:hover .dropdown {
+.more-options:focus + .dropdown-menu,
+.dropdown-menu:hover,
+.more-options:focus-within + .dropdown-menu {
   display: block;
 }
 
-.more-options .dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  z-index: 10;
-  padding: 0.5rem;
-  border-radius: 5px;
-}
-
-.dropdown button {
-  background-color: transparent;
-  border: none;
-  color: #333;
-  padding: 0.5rem;
-  cursor: pointer;
+.dropdown-menu button {
+  display: block;
   width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
   text-align: left;
+  font-size: 14px;
+  color: #333;
 }
 
-.dropdown button:hover {
-  background-color: #f8f9fa;
+.dropdown-menu button:hover {
+  background-color: #f0f0f0;
 }
 
-/* Download button */
-.download-button {
-  background-color: #ffc107;
-  color: white;
+.side-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 400px;
+  height: 100%;
+  background: linear-gradient(135deg, #f7f7f7 50%, #ffffff);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  border-left: 1px solid #ddd;
+}
+
+.side-panel-hidden {
+  transform: translateX(100%);
+}
+
+.side-panel-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.side-panel-content img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 550px;
+}
+
+.close-button {
+  align-self: flex-end;
+  padding: 5px 10px;
+  background: none;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
+  font-size: 18px;
   cursor: pointer;
+  transition: color 0.3s;
+  color: #333; /* Make button always visible */
 }
 
-.download-button:hover {
-  background-color: #e0a800;
+.close-button:hover {
+  color: #ff5c5c;
+  transform: scale(1.1);
 }
 
-/* Delete button */
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-/* Message styling */
-.message {
-  color: green;
-  font-size: 1rem;
+/* Additional styles for the side panel */
+.side-panel-content h3 {
+  font-size: 1.5rem; /* Responsive font size */
+  color: #333;
+  margin-bottom: 10px;
   text-align: center;
-  margin-top: 1rem;
+  font-weight: bold;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .side-panel {
-    width: 50%;
-  }
+.side-panel-content p {
+  font-size: 1rem; /* Responsive font size */
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
+.side-panel-content .action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.side-panel-content .action-buttons button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.side-panel-content .action-buttons button:hover {
+  background-color: #0056b3;
+}
+
+input {
+  padding: 8px;
+  width: 60%;
+  font-size: 16px;
+  text-align: center;
+  border: 1px solid rgb(53, 53, 51);
+  border-radius: 10%;
+}
+
+.detail {
+  font-size: 1.5rem; /* Increase font size for prominence */
+  font-weight: bold; /* Make the text bold */
+  align-self: flex-start;
+}
+
+
+/* Responsive styles */
 @media (max-width: 768px) {
+  .photo-module {
+    padding: 10px;
+  }
+
+  .metadata-container {
+    width: 100%; /* Full width on smaller screens */
+  }
+
+  .image-card p {
+    font-size: 12px; /* Adjust font size for smaller screens */
+  }
+
   .side-panel {
-    width: 80%;
+    width: 100%; /* Full width for smaller screens */
+    max-width: 300px; /* Limit maximum width */
   }
 
-  .button-container {
-    flex-direction: row;
-    justify-content: space-between;
+  .side-panel-content h3 {
+    font-size: 1.2rem; /* Adjust heading size */
   }
 
-  .side-panel-content {
-    padding: 0.5rem;
+  .side-panel-content p {
+    font-size: 0.9rem; /* Adjust paragraph size */
   }
 }
 
 @media (max-width: 480px) {
-  .share-button, .more-options, .download-button, .delete-button {
-    font-size: 1rem;
-    padding: 0.5rem 0.8rem;
+  .image-card {
+    padding: 0.5rem; /* Adjust padding for smaller devices */
   }
 
-  .button-container {
-    gap: 0.3rem;
+  .image-card p {
+    font-size: 11px; /* Further reduce font size */
   }
 }
