@@ -1,9 +1,10 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
+import "../css/gallery.css"
 
 const Gallary = () => {
   return (
-    <div className="container">
+    <div className="full-width-container">
       <h1>Gallery</h1>
       <nav>
         <div className="nav nav-tabs">

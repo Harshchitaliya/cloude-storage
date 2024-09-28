@@ -1,9 +1,12 @@
+/* Base Layout - Full Width Adjustment */
 .photo-module {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
   font-family: Arial, sans-serif;
+  width: 100%; /* Use full width */
+  margin: 0; /* Remove margin for full-width behavior */
 }
 
 .message {
@@ -11,14 +14,14 @@
   margin-bottom: 20px;
 }
 
-
 .upload-container {
   margin-bottom: 20px;
 }
 
+/* Adjust button size and layout on larger screens */
 .upload-container button {
   padding: 10px 20px;
-  font-size: 1rem; /* Changed to rem for scalability */
+  font-size: 1rem;
   border: none;
   background-color: #007bff;
   color: white;
@@ -36,8 +39,8 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
-  width: 100%; /* Set to 100% for responsiveness */
-  max-width: 300px; /* Max width for larger screens */
+  width: 100%;
+  max-width: 300px;
 }
 
 .metadata-container input {
@@ -62,14 +65,16 @@
   background-color: #218838;
 }
 
+/* Grid Layout for Images - Responsive */
 .image-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive grid */
   gap: 20px;
-  width: 100%;
+  width: 100%; /* Full width */
   padding: 20px 0;
 }
 
+/* Card for each image with responsive layout */
 .image-card {
   position: relative;
   display: flex;
@@ -82,7 +87,7 @@
   background-color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
-  height: 250px; /* Fixed height for uniformity */
+  height: 250px;
 }
 
 .image-card:hover {
@@ -90,10 +95,10 @@
 }
 
 .image-card img {
-  width: 100%; /* Ensures the image scales with the card */
-  height: 180px; /* Fixed height for all images */
-  object-fit: cover; /* Ensures the image covers the area without distortion */
-  border-radius: 8px; /* Maintain rounded corners */
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
   margin-bottom: 10px;
 }
 
@@ -101,9 +106,8 @@
   margin: 0;
   font-size: 16px;
   color: #555;
-  text-align: center; /* Center text in the card */
+  text-align: center;
 }
-
 
 .dropdown {
   position: absolute;
@@ -154,11 +158,12 @@
   background-color: #f0f0f0;
 }
 
+/* Side Panel for Larger Screens */
 .side-panel {
   position: fixed;
   right: 0;
   top: 0;
-  width: 400px;
+  width: 50%; /* Set the width to 50% of the screen */
   height: 100%;
   background: linear-gradient(135deg, #f7f7f7 50%, #ffffff);
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
@@ -184,7 +189,7 @@
   border-radius: 10px;
   margin-bottom: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  height: 550px;
+  height: 550px; /* Adjust this value if needed */
 }
 
 .close-button {
@@ -195,7 +200,7 @@
   font-size: 18px;
   cursor: pointer;
   transition: color 0.3s;
-  color: #333; /* Make button always visible */
+  color: #333;
 }
 
 .close-button:hover {
@@ -203,91 +208,9 @@
   transform: scale(1.1);
 }
 
-/* Additional styles for the side panel */
-.side-panel-content h3 {
-  font-size: 1.5rem; /* Responsive font size */
-  color: #333;
-  margin-bottom: 10px;
-  text-align: center;
-  font-weight: bold;
-}
-
-.side-panel-content p {
-  font-size: 1rem; /* Responsive font size */
-  color: #666;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.side-panel-content .action-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.side-panel-content .action-buttons button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.side-panel-content .action-buttons button:hover {
-  background-color: #0056b3;
-}
-
-input {
-  padding: 8px;
-  width: 60%;
-  font-size: 16px;
-  text-align: center;
-  border: 1px solid rgb(53, 53, 51);
-  border-radius: 10%;
-}
-
 .detail {
-  font-size: 1.5rem; /* Increase font size for prominence */
-  font-weight: bold; /* Make the text bold */
+  font-size: 1.5rem;
+  font-weight: bold;
   align-self: flex-start;
 }
 
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .photo-module {
-    padding: 10px;
-  }
-
-  .metadata-container {
-    width: 100%; /* Full width on smaller screens */
-  }
-
-  .image-card p {
-    font-size: 12px; /* Adjust font size for smaller screens */
-  }
-
-  .side-panel {
-    width: 100%; /* Full width for smaller screens */
-    max-width: 300px; /* Limit maximum width */
-  }
-
-  .side-panel-content h3 {
-    font-size: 1.2rem; /* Adjust heading size */
-  }
-
-  .side-panel-content p {
-    font-size: 0.9rem; /* Adjust paragraph size */
-  }
-}
-
-@media (max-width: 480px) {
-  .image-card {
-    padding: 0.5rem; /* Adjust padding for smaller devices */
-  }
-
-  .image-card p {
-    font-size: 11px; /* Further reduce font size */
-  }
-}

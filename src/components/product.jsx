@@ -266,12 +266,14 @@ const Product = () => {
   const [folderContent, setFolderContent] = useState([]);
   const [mainMedia, setMainMedia] = useState({ url: '', type: 'image' });
   const [metadata, setMetadata] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Initialize isMobile
 
   const storage = getStorage();
   const auth = getAuth();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('User state changed:', user); // Add this line for debugging
       if (user) {
         setUser(user);
         loadUserFolders(user);
@@ -280,9 +282,19 @@ const Product = () => {
       }
       setLoading(false);
     });
-
-    return () => unsubscribe();
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+  
+    window.addEventListener('resize', handleResize);
+  
+    return () => {
+      unsubscribe();
+      window.removeEventListener('resize', handleResize);
+    };
   }, [auth]);
+  
 
   const loadUserFolders = (user) => {
     const userFolderRef = ref(storage, `users/${user.uid}/`);
@@ -480,47 +492,55 @@ const Product = () => {
       )}
 
       {!selectedFolder ? (
-        <table className="product-table">
-          <thead>
-            <tr>
-              <th>Media</th>
-              <th>SKU</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th>Price</th>
-              <th>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {folders.map((folder) => (
-              <tr key={folder.name} onClick={() => handleFolderClick(folder.name)} className="table-row">
-                <td>
+        <>
+          {isMobile ? (
+            <div className="product-table">
+              {folders.map((folder) => (
+                <div className="card" key={folder.name} onClick={() => handleFolderClick(folder.name)}>
                   {folder.isVideo ? (
-                    <video
-                      src={folder.thumbnail}
-                      className="folder-video-thumbnail"
-                      muted
-                      autoPlay
-                      loop
-                      loading="lazy"
-                      poster={folder.thumbnail}
-                      width="100"
-                    />
+                    <video src={folder.thumbnail} className="folder-thumbnail" muted autoPlay loop loading="lazy" />
                   ) : (
-                    <img src={folder.thumbnail} alt={folder.name} className="folder-image" loading="lazy" width="100" />
+                    <img src={folder.thumbnail} alt={folder.name} className="folder-thumbnail" loading="lazy" />
                   )}
-                </td>
-                <td>{folder.name}</td>
-                <td>{metadata[folder.name]?.title || ''}</td>
-                <td>{metadata[folder.name]?.description || ''}</td>
-                <td>{metadata[folder.name]?.type || ''}</td>
-                <td>{metadata[folder.name]?.price || ''}</td>
-                <td>{metadata[folder.name]?.quantity || ''}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <div className="sku">{folder.name}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <table className="product-table">
+              <thead>
+                <tr>
+                  <th>Media</th>
+                  <th>SKU</th>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {folders.map((folder) => (
+                  <tr key={folder.name} onClick={() => handleFolderClick(folder.name)} className="table-row">
+                    <td>
+                      {folder.isVideo ? (
+                        <video src={folder.thumbnail} className="folder-video-thumbnail" muted autoPlay loop loading="lazy" />
+                      ) : (
+                        <img src={folder.thumbnail} alt={folder.name} className="folder-image" loading="lazy" />
+                      )}
+                    </td>
+                    <td>{folder.name}</td>
+                    <td>{metadata[folder.name]?.title || ''}</td>
+                    <td>{metadata[folder.name]?.description || ''}</td>
+                    <td>{metadata[folder.name]?.type || ''}</td>
+                    <td>{metadata[folder.name]?.price || ''}</td>
+                    <td>{metadata[folder.name]?.quantity || ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
       ) : (
         <div className="folder-content-container">
           <div className="media-content">
@@ -537,7 +557,6 @@ const Product = () => {
                       src={file.url}
                       className="thumbnail-video"
                       onClick={() => setMainMedia(file)}
-                      poster={file.url}
                       muted
                       loading="lazy"
                     />
@@ -570,13 +589,12 @@ const Product = () => {
               />
             </label>
             <label>
+              Type
+              <input type="text" name="type" value={metadata[selectedFolder]?.type || ''} onChange={handleMetadataChange} />
+            </label>
+            <label>
               Price
-              <input
-                type="text"
-                name="price"
-                value={metadata[selectedFolder]?.price || ''}
-                onChange={handleMetadataChange}
-              />
+              <input type="number" name="price" value={metadata[selectedFolder]?.price || ''} onChange={handleMetadataChange} />
             </label>
             <label>
               Quantity
@@ -587,11 +605,7 @@ const Product = () => {
                 onChange={handleMetadataChange}
               />
             </label>
-            <label>
-              Type
-              <input type="text" name="type" value={metadata[selectedFolder]?.type || ''} onChange={handleMetadataChange} />
-            </label>
-            <button onClick={handleSaveMetadata}>Save Metadata</button>
+            <button onClick={handleSaveMetadata}>Save</button>
           </div>
         </div>
       )}

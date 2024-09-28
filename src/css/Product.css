@@ -75,7 +75,7 @@
   
   .metadata-content {
     flex: 1; /* Metadata takes less space */
-    max-width: 300px; /* Optional: set a max width for the metadata section */
+    max-width: 800px; /* Optional: set a max width for the metadata section */
     border-left: 2px solid #333; /* Dark gray line between SKU and metadata */
     padding-left: 20px; /* Space between line and content */
   }
@@ -84,7 +84,7 @@
   .main-image,
   .main-video {
     width: 100%;
-    height: 600px;
+    height: 500px;
     object-fit: cover;
     border: 2px solid #ddd; /* Light gray border */
     border-radius: 5px;
@@ -321,3 +321,100 @@
       height: 40px;
     }
   }
+  @media (max-width: 768px) {
+    /* Card layout for media and SKU */
+    .product-table {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 10px;
+      border: none;
+    }
+  
+    .product-table tbody,
+    .product-table thead {
+      display: none;
+    }
+  
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: box-shadow 0.3s ease;
+    }
+  
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  
+    .card img,
+    .card video {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      object-fit: contain;
+    }
+  
+    .card .sku {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+  
+    /* Full-screen view for media and metadata when a card is clicked */
+    .folder-content-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 10px;
+    }
+  
+    .media-content {
+      order: 1;
+    }
+  
+    .metadata-content {
+      order: 2;
+      padding-left: 0;
+      max-width: 100%;
+      width: 100%;
+    }
+  
+    .thumbnail-container {
+      display: flex; /* Ensure the container uses flexbox for better scrolling */
+      overflow-x: auto; /* Allow horizontal scrolling */
+      overflow-y: hidden; /* Hide vertical overflow */
+      gap: 10px; /* Optional: add some space between thumbnails */
+      padding: 10px 0; /* Optional: add padding for aesthetics */
+    }
+  
+    .thumbnail-container img {
+      width: 80px; /* Adjust width for thumbnails */
+      height: 80px; /* Adjust height for thumbnails */
+      border-radius: 4px; /* Adjust border radius for thumbnails */
+      object-fit: cover; /* Ensure proper image fitting */
+    }
+  
+    /* Adjust back button for mobile */
+    .back-button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+  
+    .back-button:hover {
+      background-color: #444;
+      color: white;
+    }
+  }
+  /* End of mobile design */
+  
