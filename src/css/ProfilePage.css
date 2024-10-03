@@ -1,49 +1,101 @@
-.profile-container {
-    width: 50%;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-    text-align: center;
-  }
-  
-  .profile-info p {
-    font-size: 18px;
-    margin: 10px 0;
-  }
-  
-  .profile-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .profile-form div {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  input {
-    padding: 8px;
-    width: 60%;
-    font-size: 16px;
-  }
-  
-  button {
-    padding: 10px 15px;
-    margin-top: 10px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    background-color: #007BFF;
-    color: white;
-    font-size: 16px;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
+/* UserProfile.css */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.heading {
+  text-align: center;
+  color: #333;
+}
+
+.detailsContainer {
+  margin-bottom: 20px;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.value {
+  display: inline-block;
+  padding: 8px;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border 0.2s;
+}
+
+.loading {
+  text-align: center;
+  font-size: 18px;
+  color: #007bff;
+}
+
+.error {
+  text-align: center;
+  color: red;
+  font-size: 16px;
+}
+
+.storageCard {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.storageHeading {
+  text-align: center;
+  color: #333;
+}
+
+.storageItem {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.storageValue {
+  font-weight: bold;
+}
+
+.progressContainer {
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: #007bff;
+  border-radius: 5px;
+}
+
+.storageInfo {
+  text-align: center;
+  color: #555;
+}

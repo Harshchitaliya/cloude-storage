@@ -1,174 +1,165 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { updateEmail, sendEmailVerification, onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from './firebase'; // Ensure Firestore and Auth are correctly initialized
-import '../css/ProfilePage.css'; // Assuming you create this CSS file for styling
+import { db, auth } from './firebase'; // Import your Firebase setup
+import '../css/ProfilePage.css'; // Import the CSS file
 
-const ProfilePage = () => {
-  const [userData, setUserData] = useState({ name: '', email: '', mobileNo: '' });
+const UserProfile = () => {
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobileNo: '',
+    video_used: 0,
+    image_used: 0,
+    storage_used: 0,
+  });
+
+  const [isEditing, setIsEditing] = useState({
+    firstName: false,
+    lastName: false,
+    mobileNo: false,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editing, setEditing] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    const uid = localStorage.getItem('uid');
-    if (uid) {
-      const fetchUserData = async () => {
-        const userDocRef = doc(db, 'Users', uid);
-        try {
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
-            const data = userDocSnap.data();
-            setUserData({
-              name: data.name || '',
-              email: data.email || '',
-              mobileNo: data.mobileNo || '',
-            });
-            setNewEmail(data.email || '');
-            setIsEmailVerified(auth.currentUser?.emailVerified); // Check if email is verified
-          } else {
-            setError('No such document!');
-          }
-        } catch (error) {
-          setError('Error fetching user data');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchUserData();
-    } else {
-      setLoading(false);
-    }
-
-    // Track email verification status in real-time
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsEmailVerified(user.emailVerified);
-        if (verificationSent && user.emailVerified) {
-          updateEmailInFirestore();
-        }
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        const userId = currentUser.uid; // Get the UID of the logged-in user
+        await fetchUserData(userId); // Fetch user data based on UID
+      } else {
+        setError('Please log in'); // Show login prompt if no user is logged in
       }
+      setLoading(false); // Stop loading state
     });
 
-    return () => unsubscribe(); // Cleanup on unmount
-  }, [verificationSent]);
+    return () => unsubscribe(); // Cleanup subscription on component unmount
+  }, []);
 
-  const handleInputChange = (e) => {
-    setUserData({ ...userData, [e.target.name]: e.target.value });
-  };
+  const fetchUserData = async (userId) => {
+    const userDoc = doc(db, 'Users', userId); // Reference to the user document in Firestore
+    const docSnapshot = await getDoc(userDoc);
 
-  const handleEmailChange = (e) => {
-    setNewEmail(e.target.value);
-  };
-
-  const handleSaveChanges = async () => {
-    const uid = localStorage.getItem('uid');
-    const userDocRef = doc(db, 'Users', uid);
-
-    try {
-      // Update Firestore document with name and mobileNo
-      await updateDoc(userDocRef, {
-        name: userData.name,
-        mobileNo: userData.mobileNo,
-      });
-
-      const user = auth.currentUser;
-
-      // If email has changed, verify the old email is verified before changing
-      if (newEmail !== userData.email) {
-        if (!user.emailVerified) {
-          setError('Please verify your current email before changing to a new one.');
-          return;
-        }
-
-        await updateEmail(user, newEmail);
-        await sendEmailVerification(user); // Send email verification for the new email
-        setVerificationSent(true);
-        setSuccessMessage('A verification email has been sent. Please verify before we update your email.');
-      } else {
-        setSuccessMessage('Profile updated successfully.');
-      }
-
-      setEditing(false);
-    } catch (error) {
-      console.error('Error updating user data:', error);
-      setError('Error updating user data. Please try again.');
+    if (docSnapshot.exists()) {
+      setUser(docSnapshot.data()); // Set user data
+    } else {
+      setError('User data not found');
     }
   };
 
-  const updateEmailInFirestore = async () => {
-    const uid = localStorage.getItem('uid');
-    const userDocRef = doc(db, 'Users', uid);
+  const handleChange = (e) => {
+    setUser({
+      ...user,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    try {
-      // Update Firestore with the new verified email
-      await updateDoc(userDocRef, { email: newEmail });
-      setSuccessMessage('Email updated successfully after verification.');
-      setVerificationSent(false); // Reset verification state
-    } catch (error) {
-      console.error('Error updating email in Firestore:', error);
-      setError('Error updating email after verification.');
-    }
+  const enableEditing = (field) => {
+    setIsEditing((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleSave = async (field) => {
+    const userId = auth.currentUser.uid; // Get the UID of the logged-in user
+    const userDoc = doc(db, 'Users', userId);
+    await updateDoc(userDoc, { [field]: user[field] });
+    setIsEditing((prev) => ({ ...prev, [field]: false }));
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="error">{error}</div>;
   }
 
   return (
-    <div className="profile-container">
-      <h2>Profile Page</h2>
-      {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
-      {editing ? (
-        <div className="profile-form">
-          <div>
-            <label>Name:</label>
+    <div className="container">
+      <h1 className="heading">User Profile</h1>
+
+      <div className="detailsContainer">
+        <div className="field">
+          <label className="label">First Name:</label>
+          {isEditing.firstName ? (
             <input
+              className="input"
               type="text"
-              name="name"
-              value={userData.name}
-              onChange={handleInputChange}
+              name="firstName"
+              value={user.firstName}
+              onChange={handleChange}
+              onBlur={() => handleSave('firstName')} // Save on blur
             />
-          </div>
-          <div>
-            <label>Email:</label>
+          ) : (
+            <span className="value" onClick={() => enableEditing('firstName')}>
+              {user.firstName || 'Click to add'}
+            </span>
+          )}
+        </div>
+
+        <div className="field">
+          <label className="label">Last Name:</label>
+          {isEditing.lastName ? (
             <input
-              type="email"
-              name="email"
-              value={newEmail}
-              onChange={handleEmailChange}
+              className="input"
+              type="text"
+              name="lastName"
+              value={user.lastName}
+              onChange={handleChange}
+              onBlur={() => handleSave('lastName')} // Save on blur
             />
-          </div>
-          <div>
-            <label>Mobile Number:</label>
+          ) : (
+            <span className="value" onClick={() => enableEditing('lastName')}>
+              {user.lastName || 'Click to add'}
+            </span>
+          )}
+        </div>
+
+        <div className="field">
+          <label className="label">Email:</label>
+          <span className="value">{user.email}</span>
+        </div>
+
+        <div className="field">
+          <label className="label">Mobile No:</label>
+          {isEditing.mobileNo ? (
             <input
+              className="input"
               type="text"
               name="mobileNo"
-              value={userData.mobileNo}
-              onChange={handleInputChange}
+              value={user.mobileNo}
+              onChange={handleChange}
+              onBlur={() => handleSave('mobileNo')} // Save on blur
             />
-          </div>
-          <button onClick={handleSaveChanges}>Save Changes</button>
-          <button onClick={() => setEditing(false)}>Cancel</button>
+          ) : (
+            <span className="value" onClick={() => enableEditing('mobileNo')}>
+              {user.mobileNo || 'Click to add'}
+            </span>
+          )}
         </div>
-      ) : (
-        <div className="profile-info">
-          <p><strong>Name:</strong> {userData.name}</p>
-          <p><strong>Email:</strong> {userData.email}</p>
-          <p><strong>Mobile Number:</strong> {userData.mobileNo || 'No mobile number available'}</p>
-          <button onClick={() => setEditing(true)}>Edit Profile</button>
+      </div>
+
+      <div className="storageCard">
+        <h2 className="storageHeading">Storage Information</h2>
+        <div className="storageItem">
+          <span>Videos Used: </span>
+          <span className="storageValue">{user.video_used}</span>
         </div>
-      )}
+        <div className="storageItem">
+          <span>Images Used: </span>
+          <span className="storageValue">{user.image_used}</span>
+        </div>
+        <div className="storageItem">
+          <span>Storage Used: </span>
+          <span className="storageValue">{user.storage_used} GB</span>
+        </div>
+        <div className="progressContainer">
+          <div className="progressBar" style={{ width: `${(user.storage_used / 5) * 100}%` }} />
+        </div>
+        <span className="storageInfo">{user.storage_used} / 5 GB used</span>
+      </div>
     </div>
   );
 };
 
-export default ProfilePage;
+export default UserProfile;
