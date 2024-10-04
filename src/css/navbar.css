@@ -1,0 +1,40 @@
+/* Default link styles */
+.navbar-nav .nav-link {
+    position: relative;
+    color: black;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  /* Before and after pseudo-elements for the hover effect */
+  .navbar-nav .nav-link::before,
+  .navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background-color: lightblue; /* Light blue underline */
+    bottom: 0;
+    left: 50%;
+    transition: width 0.3s ease-in-out, left 0.3s ease-in-out;
+  }
+  
+  /* Hover effect: light blue text and underline */
+  .navbar-nav .nav-link:hover {
+    color: lightblue; /* Light blue text color on hover */
+  }
+  
+  .navbar-nav .nav-link:hover::before,
+  .navbar-nav .nav-link:hover::after {
+    width: 100%;
+    left: 0;
+  }
+  
+  /* Active link background color */
+  .navbar-nav .nav-link.active {
+    background-color: lightblue; /* Light blue background for active link */
+    color: white; /* Optional: white text for contrast on active link */
+    border-radius: 5px; /* Rounded corners */
+    padding: 0.5rem 1rem; /* Add padding for better appearance */
+  }
+  

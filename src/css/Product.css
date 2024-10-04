@@ -69,25 +69,27 @@
   
   /* Adjusted flex properties for media and metadata */
   .media-content {
-    flex: 2; /* Media content takes more space */
+    flex: 1; /* Media content takes more space */
     overflow-y: auto; /* Allow vertical scrolling if needed */
   }
   
   .metadata-content {
     flex: 1; /* Metadata takes less space */
     max-width: 800px; /* Optional: set a max width for the metadata section */
-    border-left: 2px solid #333; /* Dark gray line between SKU and metadata */
+   
     padding-left: 20px; /* Space between line and content */
   }
   
   /* Main media display */
   .main-image,
   .main-video {
-    width: 100%;
+    width: 85%;
     height: 500px;
-    object-fit: cover;
+    object-fit: contain;
     border: 2px solid #ddd; /* Light gray border */
     border-radius: 5px;
+    margin-left: 70px;
+    margin-bottom: 10px;
   }
   
   /* Thumbnail layout */
@@ -124,7 +126,7 @@
   
   .metadata-content label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 25px;
     font-weight: bold;
     color: #555; /* Slightly lighter gray for labels */
     line-height: 1.5;
@@ -134,44 +136,53 @@
     width: 100%;
     padding: 8px;
     margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc; /* Light gray border */
+    margin-bottom: 19px;
+    border: 1px solid #9cb9bb; /* Light gray border */
     border-radius: 4px;
     box-sizing: border-box;
     background-color: #ffffff; /* White background for inputs */
   }
 
+  .metadata-content input:hover{
+    border-color: #0a0f12;
+    box-shadow: inset;
+  }
+
   /* Metadata content styling */
 .metadata-content button {
     padding: 10px 20px;
-    background-color: #333; /* Dark gray background */
-    color: #ffffff; /* White text */
+    background-color: #f4ecec; /* Dark gray background */
+    color: #090808; /* White text */
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    border: 1px solid black;
+    width: 30%;
   }
   
   .metadata-content button:hover {
-    background-color: #555; /* Lighter gray on hover */
+    background-color: #bcd9ee; /* Lighter gray on hover */
   }
   
   /* Back button styling */
   .back-button {
+    width: 5%;
     padding: 8px 12px;
     background-color: #ffffff; /* White background */
     color: #333; /* Dark gray text */
     border: 1px solid #333; /* Dark gray border */
     border-radius: 4px; /* Slightly rounded corners */
     cursor: pointer;
+    margin-left: 10px;
     margin-bottom: 15px;
     font-weight: 500; /* Make the text a bit bolder */
     transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
   }
   
   .back-button:hover {
-    background-color: #333; /* Dark gray background on hover */
-    color: #ffffff; /* White text on hover */
+    background-color: #c8e8ed; /* Dark gray background on hover */
+    color: #100f0f; /* White text on hover */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add subtle shadow for raised effect */
   }
   
@@ -216,11 +227,11 @@
 .product-table th,
 .product-table td {
   padding: 12px 18px;
-  text-align: left;
+  text-align: center;
   overflow: hidden; /* Hides content that overflows the cell */
   text-overflow: ellipsis; /* Adds ellipsis (...) to overflowing text */
   white-space: nowrap; /* Prevents text from wrapping */
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid #dde7eb;
 }
 
 .product-table th {
@@ -279,6 +290,91 @@
     animation: loading 1.5s linear infinite;
   }
   
+  /* Search Bar and Filter Section */
+.filter-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 15px; /* Increased padding for a more spacious look */
+  margin: 15px 0;
+  background-color: #f9f9f9; /* Light background for contrast */
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow for depth */
+  gap: 10px;
+}
+
+/* Filter select styling */
+.filter-select {
+  padding: 12px; /* Increased padding for comfort */
+  border: 1px solid #ccc; /* Light border */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 16px;
+  color: #333; /* Dark text */
+  background-color: #ffffff; /* White background */
+  transition: border 0.3s, box-shadow 0.3s; /* Smooth transition */
+}
+
+.filter-select:hover,
+.filter-select:focus {
+  border-color: #007bff; /* Highlight border on hover or focus */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Light blue glow on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Filter input styling */
+.filter-input {
+  padding: 12px; /* Increased padding */
+  border: 1px solid #ccc; /* Light border */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 16px;
+  color: #333; /* Dark text */
+  background-color: #ffffff; /* White background */
+  transition: border 0.3s, box-shadow 0.3s; /* Smooth transition */
+  width: 25%; /* Set a width */
+}
+
+.filter-input:hover,
+.filter-input:focus {
+  border-color: #007bff; /* Highlight border on hover or focus */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Light blue glow on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Clear button styling */
+.clear-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px; /* Rounded corners */
+  font-size: 16px;
+  color: #ffffff; /* White text */
+  background-color: #dc3545; /* Bootstrap danger color */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+}
+
+.clear-button:hover {
+  background-color: #c82333; /* Darker red on hover */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .filter-container {
+      flex-direction: column; /* Stack elements vertically on mobile */
+      align-items: stretch; /* Stretch to full width */
+  }
+
+  .filter-input,
+  .filter-select {
+      width: 100%; /* Full width on mobile */
+      margin-bottom: 10px; /* Spacing below elements */
+  }
+
+  .clear-button {
+      width: 100%; /* Full width on mobile */
+  }
+}
+
   @keyframes loading {
     0% {
       transform: translateX(0);
