@@ -392,6 +392,21 @@
     font-size: 16px;
     padding: 12px 18px;
   }
+
+  .delete-button {
+    background-color: #f0b8b1;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+  
+  .delete-button:hover {
+    background-color: #a61b0c;
+  }
+  
   
   /* Responsive adjustments for smaller screens */
   @media (max-width: 1200px) {
@@ -441,6 +456,7 @@
       padding: 15px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       transition: box-shadow 0.3s ease;
+      width: 90%;
     }
   
     .card:hover {
@@ -455,7 +471,7 @@
       margin-bottom: 10px;
       object-fit: contain;
     }
-  
+
     .card .sku {
       font-size: 16px;
       font-weight: bold;
@@ -474,6 +490,21 @@
   
     .media-content {
       order: 1;
+  
+    }
+
+    .main-image
+    {
+
+      margin-left: 30px;
+
+    }
+
+    .main-video
+    {
+
+      margin-left: 30px;
+
     }
   
     .metadata-content {
@@ -488,7 +519,9 @@
       overflow-x: auto; /* Allow horizontal scrolling */
       overflow-y: hidden; /* Hide vertical overflow */
       gap: 10px; /* Optional: add some space between thumbnails */
-      padding: 10px 0; /* Optional: add padding for aesthetics */
+    align-items: center;
+    justify-items: center;
+      width: 100%;
     }
   
     .thumbnail-container img {
@@ -496,11 +529,12 @@
       height: 80px; /* Adjust height for thumbnails */
       border-radius: 4px; /* Adjust border radius for thumbnails */
       object-fit: cover; /* Ensure proper image fitting */
+      
     }
   
     /* Adjust back button for mobile */
     .back-button {
-      width: 100%;
+      width: 95%;
       padding: 10px;
       font-size: 16px;
       margin-bottom: 15px;
