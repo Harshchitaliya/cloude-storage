@@ -272,7 +272,7 @@
   
     .side-panel {
       width: 100%; /* Full width for smaller screens */
-      max-width: 300px; /* Limit maximum width */
+  
     }
   
     .side-panel-content h3 {
@@ -282,6 +282,7 @@
     .side-panel-content p {
       font-size: 0.9rem; /* Adjust paragraph size */
     }
+ 
   }
   
   @media (max-width: 480px) {

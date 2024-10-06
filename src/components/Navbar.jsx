@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import '../css/navbar.css'
 const NavBar = () => {
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary">
+    <nav className="navbar navbar-expand-lg " style={{ backgroundColor: '#474768' }}>
       <div className="container-fluid">
         {/* Updated "MyApp" to "Home" */}
         <Link className="navbar-brand" to="/">Home</Link>
@@ -24,7 +24,7 @@ const NavBar = () => {
               <Link className="nav-link" to="/Product">product</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/Gallary">Gallary</Link>
+              <Link className="nav-link" to="/Gallery">Gallery</Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/Delete">Delete</Link>

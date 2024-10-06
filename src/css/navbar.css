@@ -1,7 +1,7 @@
 /* Default link styles */
 .navbar-nav .nav-link {
     position: relative;
-    color: black;
+    color: rgb(209, 217, 221);
     text-decoration: none;
     transition: color 0.3s ease-in-out;
   }
@@ -21,7 +21,7 @@
   
   /* Hover effect: light blue text and underline */
   .navbar-nav .nav-link:hover {
-    color: lightblue; /* Light blue text color on hover */
+    color: rgb(74, 150, 175); /* Light blue text color on hover */
   }
   
   .navbar-nav .nav-link:hover::before,
@@ -32,9 +32,23 @@
   
   /* Active link background color */
   .navbar-nav .nav-link.active {
-    background-color: lightblue; /* Light blue background for active link */
+    background-color: rgb(76, 159, 186); /* Light blue background for active link */
     color: white; /* Optional: white text for contrast on active link */
     border-radius: 5px; /* Rounded corners */
     padding: 0.5rem 1rem; /* Add padding for better appearance */
   }
   
+  .navbar-brand{
+
+    color:white
+
+  }
+
+  .navbar-brand:hover{
+
+    color:rgb(76, 159, 186);
+  }
+
+  .navbar-toggler {
+background-color: white;
+  }

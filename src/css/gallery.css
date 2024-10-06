@@ -1,7 +1,98 @@
+/* Container for the gallery and bottom navigation */
 .full-width-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0 15px; /* Optional: Adjust padding as needed */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 100vh; /* Make sure it fills the whole height of the viewport */
+}
+
+/* Main heading for the gallery with hover effect */
+h1 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 28px;
+  color: #333;
+  letter-spacing: 0.8px;
+  margin-top: 15px;
+  transition: color 0.3s ease; /* Add transition for smooth color change */
+}
+
+h1:hover {
+  color: lightblue; /* Light blue color on hover */
+}
+
+/* Tab content (Gallery) is now at the top */
+.tab-content {
+  flex-grow: 1; /* Take up most of the vertical space */
+  font-size: 14px; /* Smaller font size for content */
+  line-height: 1.6;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  width: 100%; /* Make the gallery content full-width */
+  margin-bottom: 70px; /* Add bottom margin to prevent content from hiding behind navbar */
+}
+
+/* Bottom navigation bar container */
+.nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Add spacing between links */
+  padding: 10px 0;
+  width: 100%;
+  border-top: 1px solid #ddd; /* Horizontal separator at the top of the navbar */
+  background-color: #fff;
+  position: fixed; /* Fixes the navbar to the viewport */
+  bottom: 0; /* Position it at the bottom */
+  left: 0; /* Align it to the left */
+  z-index: 100; /* Ensure the navbar is always on top */
+  background-color: #474768;
+}
+
+/* Default link styles for the bottom navbar */
+.nav-tabs .nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 15px;
+  transition: color 0.3s ease-in-out, transform 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: relative;
+}
+
+/* Hover effect for bottom navigation */
+.nav-tabs .nav-link:hover {
+  color: #1e90ff;
+  transform: translateY(-2px); /* Slight upward movement on hover */
+}
+
+/* Active state for bottom nav */
+.nav-tabs .nav-link.active {
+  color: #1e90ff;
+  font-weight: bold;
+  border-bottom: 2px solid lightblue; /* Underline active link */
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .tab-content {
+    padding: 15px;
   }
-  
+
+  .nav-tabs {
+    flex-wrap: wrap; /* Allow nav items to wrap if there's not enough space */
+    gap: 10px;
+  }
+
+  .nav-tabs .nav-link {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+}

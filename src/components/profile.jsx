@@ -75,88 +75,86 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="container">
-      <h1 className="heading">User Profile</h1>
+    <div className="profileContainer">
+      <div className="userInfoSection">
+        <h1 className="heading">Personal Information</h1>
+        <div className="userInfo">
+          <div className="inputRow">
+            <div className="field">
+              <label>First Name:</label>
+              {isEditing.firstName ? (
+                <input
+                  type="text"
+                  name="firstName"
+                  value={user.firstName}
+                  onChange={handleChange}
+                  onBlur={() => handleSave('firstName')}
+                />
+              ) : (
+                <span onClick={() => enableEditing('firstName')}>{user.firstName || 'Click to add'}</span>
+              )}
+            </div>
 
-      <div className="detailsContainer">
-        <div className="field">
-          <label className="label">First Name:</label>
-          {isEditing.firstName ? (
-            <input
-              className="input"
-              type="text"
-              name="firstName"
-              value={user.firstName}
-              onChange={handleChange}
-              onBlur={() => handleSave('firstName')} // Save on blur
-            />
-          ) : (
-            <span className="value" onClick={() => enableEditing('firstName')}>
-              {user.firstName || 'Click to add'}
-            </span>
-          )}
-        </div>
+            <div className="field">
+              <label>Last Name:</label>
+              {isEditing.lastName ? (
+                <input
+                  type="text"
+                  name="lastName"
+                  value={user.lastName}
+                  onChange={handleChange}
+                  onBlur={() => handleSave('lastName')}
+                />
+              ) : (
+                <span onClick={() => enableEditing('lastName')}>{user.lastName || 'Click to add'}</span>
+              )}
+            </div>
+          </div>
 
-        <div className="field">
-          <label className="label">Last Name:</label>
-          {isEditing.lastName ? (
-            <input
-              className="input"
-              type="text"
-              name="lastName"
-              value={user.lastName}
-              onChange={handleChange}
-              onBlur={() => handleSave('lastName')} // Save on blur
-            />
-          ) : (
-            <span className="value" onClick={() => enableEditing('lastName')}>
-              {user.lastName || 'Click to add'}
-            </span>
-          )}
-        </div>
+          <div className="inputRow">
+            <div className="field">
+              <label>Email:</label>
+              <span>{user.email}</span>
+            </div>
 
-        <div className="field">
-          <label className="label">Email:</label>
-          <span className="value">{user.email}</span>
-        </div>
-
-        <div className="field">
-          <label className="label">Mobile No:</label>
-          {isEditing.mobileNo ? (
-            <input
-              className="input"
-              type="text"
-              name="mobileNo"
-              value={user.mobileNo}
-              onChange={handleChange}
-              onBlur={() => handleSave('mobileNo')} // Save on blur
-            />
-          ) : (
-            <span className="value" onClick={() => enableEditing('mobileNo')}>
-              {user.mobileNo || 'Click to add'}
-            </span>
-          )}
+            <div className="field">
+              <label>Mobile No:</label>
+              {isEditing.mobileNo ? (
+                <input
+                  type="text"
+                  name="mobileNo"
+                  value={user.mobileNo}
+                  onChange={handleChange}
+                  onBlur={() => handleSave('mobileNo')}
+                />
+              ) : (
+                <span onClick={() => enableEditing('mobileNo')}>{user.mobileNo || 'Click to add'}</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="storageCard">
-        <h2 className="storageHeading">Storage Information</h2>
-        <div className="storageItem">
-          <span>Videos Used: </span>
-          <span className="storageValue">{user.video_used}</span>
+      <div className="storageSection">
+        <h2 className="heading">Storage Information</h2>
+        <div className="storageDetails">
+          <div className="storageItem">
+            <span>Videos Used: </span>
+            <span>{user.video_used} GB</span>
+          </div>
+          <div className="storageItem">
+            <span>Images Used: </span>
+            <span>{user.image_used} GB</span>
+          </div>
+          <div className="storageItem">
+            <span>Storage Used: </span>
+            <span>{user.storage_used} GB</span>
+          </div>
+          <div className="progressContainer">
+            <div className="progressBar" style={{ width: `${(user.storage_used / 5) * 100}%` }} />
+          </div>
+          <span className="storageInfo">{user.storage_used} / 5 GB used</span>
         </div>
-        <div className="storageItem">
-          <span>Images Used: </span>
-          <span className="storageValue">{user.image_used}</span>
-        </div>
-        <div className="storageItem">
-          <span>Storage Used: </span>
-          <span className="storageValue">{user.storage_used} GB</span>
-        </div>
-        <div className="progressContainer">
-          <div className="progressBar" style={{ width: `${(user.storage_used / 5) * 100}%` }} />
-        </div>
-        <span className="storageInfo">{user.storage_used} / 5 GB used</span>
       </div>
     </div>
   );

@@ -114,13 +114,13 @@ const MediaModule = () => {
                 )}
                 <p>SKU: {item.sku}</p>
                 <div className="dropdown">
-                  <button className="more-options">
+                  <button className="more-options" onClick={(e) => e.stopPropagation()}>
                     <span>⋮</span>
                   </button>
                   <div className="dropdown-menu">
-                    <button onClick={() => downloadMedia(item.url, item.type)}>⬇ Download</button>
-                    <button onClick={() => deleteMedia(item)}>🗑 Delete</button>
-                    <button onClick={() => shareMedia(item.url)}>📤 Share</button>
+                    <button onClick={(e) => { e.stopPropagation(); downloadMedia(item.url, item.type); }}>⬇ Download</button>
+                    <button onClick={(e) => { e.stopPropagation(); deleteMedia(item); }}>🗑 Delete</button>
+                    <button onClick={(e) => { e.stopPropagation(); shareMedia(item.url); }}>📤 Share</button>
                   </div>
                 </div>
               </div>

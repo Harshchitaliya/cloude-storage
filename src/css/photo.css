@@ -216,3 +216,38 @@
   align-self: flex-start;
 }
 
+/* Responsive styles */
+@media (max-width: 768px) {
+  .media-module {
+    padding: 10px;
+  }
+
+  .media-card p {
+    font-size: 12px;
+  }
+
+  .side-panel {
+    width: 100%;
+  }
+
+  .side-panel-content h3 {
+    font-size: 1.2rem;
+  }
+
+  .side-panel-content p {
+    font-size: 0.9rem;
+  }
+  .side-panel-content img {
+height: 60%;
+}
+}
+
+@media (max-width: 480px) {
+  .media-card {
+    padding: 0.5rem;
+  }
+
+  .media-card p {
+    font-size: 11px;
+  }
+}

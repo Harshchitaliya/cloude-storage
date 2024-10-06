@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import "../css/gallery.css"
 
-const Gallary = () => {
+const Gallery = () => {
   return (
     <div className="full-width-container">
       <h1>Gallery</h1>
@@ -10,19 +10,19 @@ const Gallary = () => {
         <div className="nav nav-tabs">
           {/* Update navigation to use NavLink to the respective routes */}
           <NavLink
-            to="/Gallary/All"
+            to="/Gallery/All"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             All
           </NavLink>
           <NavLink
-            to="/Gallary/Photo"
+            to="/Gallery/Photo"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             Image
           </NavLink>
           <NavLink
-            to="/Gallary/Video"
+            to="/Gallery/Video"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             Video
@@ -38,4 +38,4 @@ const Gallary = () => {
   );
 };
 
-export default Gallary;
+export default Gallery;

@@ -7,7 +7,7 @@ import Delete_item from './components/delete';
 import NavBar from './components/Navbar';
 import SignupForm from './components/signup';
 import Logout from './components/logout';
-import Gallary from './components/gallary';
+import Gallery from './components/gallery';
 import Product from './components/product';
 import MediaModule from './components/all';
 import PhotoModule from './components/photo';
@@ -25,12 +25,12 @@ function App() {
       element: <><NavBar /><HomePage /></>
     },
     {
-      path: "/Gallary",
-      element: <><NavBar /><Gallary /></>,
+      path: "/Gallery",
+      element: <><NavBar /><Gallery /></>,
       children: [
         {
           index: true,  // This will match /Gallary and redirect to /Gallary/All
-          element: <Navigate to="/Gallary/All" />
+          element: <Navigate to="/Gallery/All" />
         },
         {
           path: "All",  // Route for /Gallary/All
