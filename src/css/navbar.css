@@ -1,3 +1,7 @@
+.nav-item {
+  margin-right: 30px; /* Adjust the value as needed for spacing */
+}
+
 /* Default link styles */
 .navbar-nav .nav-link {
     position: relative;
@@ -36,11 +40,12 @@
     color: white; /* Optional: white text for contrast on active link */
     border-radius: 5px; /* Rounded corners */
     padding: 0.5rem 1rem; /* Add padding for better appearance */
-  }
+  } 
   
   .navbar-brand{
 
-    color:white
+    color:white;
+    margin-right: 40px;
 
   }
 
@@ -52,3 +57,42 @@
   .navbar-toggler {
 background-color: white;
   }
+
+  .navbar {
+    background-color: #474768;
+  }
+  
+  .navbar-nav {
+    list-style-type: none;
+    padding-left: 0;
+    display: flex;
+    gap: 20px;  /* This will create a gap between nav items */
+  }
+  
+  .nav-item {
+    display: inline-block;
+  }
+  
+  .nav-link {
+    text-decoration: none;
+    color: white;
+    padding: 10px 15px;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Hover and active link should have the same style */
+  .nav-link:hover,
+  .nav-link:focus,
+  .nav-link.active {
+  
+    /* Same highlight color for hover and active */
+    color: rgb(74, 150, 175);
+    
+  }
+  
+  /* Optional: Ensure link stays focused when clicked */
+  .nav-link:focus-visible {
+    outline: none;
+  }
+  
+  
