@@ -12,6 +12,7 @@ import Product from './components/product';
 import MediaModule from './components/all';
 import PhotoModule from './components/photo';
 import VideoModule from './components/video';
+import { AuthProvider } from './contex/theam';
 
 
 function App() {
@@ -74,7 +75,9 @@ function App() {
 
   return (
     
-    <RouterProvider router={router} />
+    <AuthProvider> {/* Wrap the router with AuthProvider */}
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 

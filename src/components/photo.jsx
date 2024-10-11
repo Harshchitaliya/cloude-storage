@@ -1,29 +1,28 @@
 
 import React, { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import '../css/photo.css'; // Import CSS for styling
+import { useAuth } from "../contex/theam";
 
 const PhotoModule = () => {
-  const [user, setUser] = useState(null);
+ 
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [message, setMessage] = useState("");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
 
-  const auth = getAuth();
+  const { currentUseruid } = useAuth();
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        displayUserImages(user.uid);
-      } else {
-        setUser(null);
-      }
-    });
-  }, [auth]);
+    
+
+    if(currentUseruid){
+      displayUserImages(currentUseruid);
+      
+    }
+  }, [currentUseruid]);
 
   const displayUserImages = async (uid) => {
     const userFolderRef = ref(storage, `users/${uid}`);
@@ -75,7 +74,7 @@ const PhotoModule = () => {
       await deleteObject(imageRef);
       console.log("Image deleted successfully.");
       setSidePanelOpen(false);
-      displayUserImages(user.uid);
+      displayUserImages(currentUseruid);
     } catch (error) {
       console.log("Error deleting the image.");
     }
@@ -100,7 +99,7 @@ const PhotoModule = () => {
 
   return (
     <div className="photo-module">
-      {user ? (
+      {currentUseruid ? (
         <>
           {message && <p className="message">{message}</p>}
           <div className="image-gallery">
