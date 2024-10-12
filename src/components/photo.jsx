@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import '../css/photo.css'; // Import CSS for styling
 import { useAuth } from "../contex/theam";
+import LazyLoad from 'react-lazyload'; // Lazy load library
 
 const PhotoModule = () => {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [message, setMessage] = useState("");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // For showing loading state
 
   const { currentUseruid } = useAuth();
 
-  useEffect(() => {
-    if (currentUseruid) {
-      displayUserImages(currentUseruid);
-    }
-  }, [currentUseruid]);
-
-  const displayUserImages = async (uid) => {
+  // Memoize the displayUserImages function to prevent unnecessary re-renders
+  const displayUserImages = useCallback(async (uid) => {
+    setLoading(true); // Show loading while fetching images
     const userFolderRef = ref(storage, `users/${uid}`);
     const result = await listAll(userFolderRef);
 
@@ -29,11 +26,9 @@ const PhotoModule = () => {
 
         const images = await Promise.all(
           imagesResult.items.map(async (itemRef) => {
-            if (!itemRef.name.endsWith(".json")) {
+            if (!itemRef.name.endsWith(".json") && itemRef.name.match(/\.(jpeg|jpg|png|webp)$/i)) {
               const url = await getDownloadURL(itemRef);
-              if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
-                return { url, sku, fullPath: itemRef.fullPath };
-              }
+              return { url, sku, fullPath: itemRef.fullPath };
             }
             return null;
           })
@@ -44,7 +39,14 @@ const PhotoModule = () => {
     );
 
     setImages(allImages.flat());
-  };
+    setLoading(false); // Stop loading once images are fetched
+  }, []);
+
+  useEffect(() => {
+    if (currentUseruid) {
+      displayUserImages(currentUseruid);
+    }
+  }, [currentUseruid, displayUserImages]);
 
   const openImagePanel = (image) => {
     setSelectedImage(image);
@@ -91,31 +93,38 @@ const PhotoModule = () => {
     }
   };
 
+  // Memoize image gallery to prevent unnecessary re-renders
+  const imageGallery = useMemo(() => {
+    return images.map((image, index) => (
+      <LazyLoad key={index} height={200} offset={100}>
+        <div className="image-card" onClick={() => openImagePanel(image)}>
+          <img src={image.url} alt={`SKU: ${image.sku}`} loading="lazy" />
+          <p>SKU: {image.sku}</p>
+          <div className="dropdown">
+            <button
+              className="more-options"
+              onClick={(e) => e.stopPropagation()} // Stop event propagation here
+            >
+              <span>⋮</span>
+            </button>
+            <div className="dropdown-menu">
+              <button onClick={() => downloadImage(image.url)}>⬇ Download</button>
+              <button onClick={() => deleteImage(image)}>🗑 Delete</button>
+              <button onClick={() => shareImage(image.url)}>📤 Share</button>
+            </div>
+          </div>
+        </div>
+      </LazyLoad>
+    ));
+  }, [images]);
+
   return (
     <div className="photo-module">
       {currentUseruid ? (
         <>
-          {message && <p className="message">{message}</p>}
+          {loading ? <p>Loading images...</p> : null}
           <div className="image-gallery">
-            {images.map((image, index) => (
-              <div key={index} className="image-card" onClick={() => openImagePanel(image)}>
-                <img src={image.url} alt={`SKU: ${image.sku}`} />
-                <p>SKU: {image.sku}</p>
-                <div className="dropdown">
-                  <button 
-                    className="more-options" 
-                    onClick={(e) => e.stopPropagation()} // Stop event propagation here
-                  >
-                    <span>⋮</span>
-                  </button>
-                  <div className="dropdown-menu">
-                    <button onClick={() => downloadImage(image.url)}>⬇ Download</button>
-                    <button onClick={() => deleteImage(image)}>🗑 Delete</button>
-                    <button onClick={() => shareImage(image.url)}>📤 Share</button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {imageGallery}
           </div>
         </>
       ) : (

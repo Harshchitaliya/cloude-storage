@@ -1,58 +1,63 @@
-import React, { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
-import '../css/all.css'; // Import CSS for styling
+import "../css/all.css"; // Import CSS for styling
+import { useAuth } from "../contex/theam";
 
 const MediaModule = () => {
-  const [user, setUser] = useState(null);
   const [media, setMedia] = useState([]);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
+  const { currentUseruid } = useAuth();
 
-  const auth = getAuth();
-
+  // Fetch media when the user logs in
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        displayUserMedia(user.uid);
-      } else {
-        setUser(null);
-      }
-    });
-  }, [auth]);
+    if (currentUseruid) {
+      setLoading(true);
+      displayUserMedia(currentUseruid).then(() => setLoading(false));
+    }
+  }, [currentUseruid]);
 
-  const displayUserMedia = async (uid) => {
-    const userFolderRef = ref(storage, `users/${uid}`);
-    const result = await listAll(userFolderRef);
+  const displayUserMedia = useCallback(async (uid) => {
+    try {
+      const userFolderRef = ref(storage, `users/${uid}`);
+      const result = await listAll(userFolderRef);
 
-    const allMedia = await Promise.all(
-      result.prefixes.map(async (skuFolderRef) => {
-        const mediaResult = await listAll(skuFolderRef);
-        const sku = skuFolderRef.name;
+      const allMedia = await Promise.all(
+        result.prefixes.map(async (skuFolderRef) => {
+          const mediaResult = await listAll(skuFolderRef);
+          const sku = skuFolderRef.name;
 
-        const media = await Promise.all(
-          mediaResult.items.map(async (itemRef) => {
-            if (!itemRef.name.endsWith(".json")) {
-              const url = await getDownloadURL(itemRef);
-              if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
-                return { type: "image", url, sku, fullPath: itemRef.fullPath };
-              } else if (itemRef.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
-                return { type: "video", url, sku, fullPath: itemRef.fullPath };
+          const media = await Promise.all(
+            mediaResult.items.map(async (itemRef) => {
+              if (!itemRef.name.endsWith(".json")) {
+                const url = await getDownloadURL(itemRef);
+                if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
+                  return { type: "image", url, sku, fullPath: itemRef.fullPath };
+                } else if (itemRef.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
+                  return { type: "video", url, sku, fullPath: itemRef.fullPath };
+                }
               }
-            }
-            return null;
-          })
-        );
+              return null;
+            })
+          );
 
-        return media.filter((item) => item !== null);
-      })
-    );
+          return media.filter((item) => item !== null);
+        })
+      );
 
-    setMedia(allMedia.flat());
-  };
+      setMedia(allMedia.flat());
+    } catch (error) {
+      console.error("Error fetching media:", error);
+    }
+  }, []);
+
+  // Memoize the media list to avoid recalculating
+  const memoizedMedia = useMemo(() => {
+    return media;
+  }, [media]);
 
   const openMediaPanel = (media) => {
     setSelectedMedia(media);
@@ -76,9 +81,11 @@ const MediaModule = () => {
       await deleteObject(mediaRef);
       console.log(`${media.type} deleted successfully.`);
       setSidePanelOpen(false);
-      displayUserMedia(user.uid);
+      setLoading(true);
+      await displayUserMedia(currentUseruid);
+      setLoading(false);
     } catch (error) {
-      console.log(`Error deleting the ${media.type}.`);
+      console.error(`Error deleting the ${media.type}:`, error);
     }
   };
 
@@ -92,7 +99,7 @@ const MediaModule = () => {
         });
         console.log(`${selectedMedia.type} shared successfully.`);
       } catch (error) {
-        console.log("Sharing failed.");
+        console.error("Sharing failed:", error);
       }
     } else {
       console.log("Sharing is not supported on this browser.");
@@ -101,31 +108,56 @@ const MediaModule = () => {
 
   return (
     <div className="media-module">
-      {user ? (
+      {currentUseruid ? (
         <>
           {message && <p className="message">{message}</p>}
-          <div className="media-gallery">
-            {media.map((item, index) => (
-              <div key={index} className="media-card" onClick={() => openMediaPanel(item)}>
-                {item.type === "image" ? (
-                  <img src={item.url} alt={`SKU: ${item.sku}`} />
-                ) : (
-                  <video src={item.url} controls width="200" />
-                )}
-                <p>SKU: {item.sku}</p>
-                <div className="dropdown">
-                  <button className="more-options" onClick={(e) => e.stopPropagation()}>
-                    <span>⋮</span>
-                  </button>
-                  <div className="dropdown-menu">
-                    <button onClick={(e) => { e.stopPropagation(); downloadMedia(item.url, item.type); }}>⬇ Download</button>
-                    <button onClick={(e) => { e.stopPropagation(); deleteMedia(item); }}>🗑 Delete</button>
-                    <button onClick={(e) => { e.stopPropagation(); shareMedia(item.url); }}>📤 Share</button>
+          {loading ? (
+            <p>Loading media...</p>
+          ) : (
+            <div className="media-gallery">
+              {memoizedMedia.map((item, index) => (
+                <div key={index} className="media-card" onClick={() => openMediaPanel(item)}>
+                  {item.type === "image" ? (
+                    <img src={item.url} alt={`SKU: ${item.sku}`} loading="lazy" />
+                  ) : (
+                    <video src={item.url} controls width="200" loading="lazy" />
+                  )}
+                  <p>SKU: {item.sku}</p>
+                  <div className="dropdown">
+                    <button className="more-options" onClick={(e) => e.stopPropagation()}>
+                      <span>⋮</span>
+                    </button>
+                    <div className="dropdown-menu">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadMedia(item.url, item.type);
+                        }}
+                      >
+                        ⬇ Download
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMedia(item);
+                        }}
+                      >
+                        🗑 Delete
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          shareMedia(item.url);
+                        }}
+                      >
+                        📤 Share
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </>
       ) : (
         <h1>Please log in to view media.</h1>
@@ -135,7 +167,9 @@ const MediaModule = () => {
         <div className={`side-panel ${sidePanelOpen ? "" : "side-panel-hidden"}`}>
           <div className="side-panel-content">
             <label className="detail">Details</label>
-            <button className="close-button" onClick={closeSidePanel}>✖</button>
+            <button className="close-button" onClick={closeSidePanel}>
+              ✖
+            </button>
             {selectedMedia.type === "image" ? (
               <img src={selectedMedia.url} alt="Selected" />
             ) : (

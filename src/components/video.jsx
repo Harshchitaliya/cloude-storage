@@ -1,28 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
-import "../css/video.css"
+import "../css/video.css"; // CSS for styling
 import { useAuth } from "../contex/theam";
 
-
-
 const VideoModule = () => {
-
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const {currentUseruid} = useAuth()
-  
+  const [loading, setLoading] = useState(false); // For loading state
+  const { currentUseruid } = useAuth();
 
-  useEffect(() => {
-
-    if(currentUseruid){
-      displayUserVideos(currentUseruid);
-    }
-  }, [currentUseruid]);
-
-  const displayUserVideos = async (uid) => {
+  // Fetch video list from Firebase Storage
+  const fetchUserVideos = useCallback(async (uid) => {
     const userFolderRef = ref(storage, `users/${uid}`);
     const result = await listAll(userFolderRef);
 
@@ -33,11 +24,9 @@ const VideoModule = () => {
 
         const videos = await Promise.all(
           videosResult.items.map(async (itemRef) => {
-            if (!itemRef.name.endsWith(".json")) {
+            if (!itemRef.name.endsWith(".json") && itemRef.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
               const url = await getDownloadURL(itemRef);
-              if (itemRef.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
-                return { url, sku, fullPath: itemRef.fullPath };
-              }
+              return { url, sku, fullPath: itemRef.fullPath };
             }
             return null;
           })
@@ -47,8 +36,23 @@ const VideoModule = () => {
       })
     );
 
-    setVideos(allVideos.flat());
-  };
+    return allVideos.flat();
+  }, []);
+
+  useEffect(() => {
+    if (currentUseruid) {
+      setLoading(true);
+      fetchUserVideos(currentUseruid).then((videos) => {
+        setVideos(videos);
+        setLoading(false);
+      });
+    }
+  }, [currentUseruid, fetchUserVideos]);
+
+  // Memoize videos list to avoid unnecessary re-computation
+  const memoizedVideos = useMemo(() => {
+    return videos;
+  }, [videos]);
 
   const openSidePanel = (video) => {
     setSelectedVideo(video);
@@ -72,7 +76,11 @@ const VideoModule = () => {
       await deleteObject(videoRef);
       setMessage("Video deleted successfully.");
       setSidePanelOpen(false);
-      displayUserVideos(currentUseruid);
+      setLoading(true);
+      fetchUserVideos(currentUseruid).then((videos) => {
+        setVideos(videos);
+        setLoading(false);
+      });
     } catch (error) {
       setMessage("Error deleting the video.");
     }
@@ -100,10 +108,11 @@ const VideoModule = () => {
       {currentUseruid ? (
         <>
           {message && <p className="message">{message}</p>}
+          {loading ? <p>Loading videos...</p> : null} {/* Show loading state */}
           <div className="video-gallery">
-            {videos.map((video, index) => (
+            {memoizedVideos.map((video, index) => (
               <div key={index} className="video-card" onClick={() => openSidePanel(video)}>
-                <video src={video.url} controls width="200" />
+                <video src={video.url} controls width="200" loading="lazy" /> {/* Lazy load videos */}
                 <p>SKU: {video.sku}</p>
                 <div className="dropdown">
                   <button className="more-options" onClick={(e) => e.stopPropagation()}>

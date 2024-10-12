@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   getStorage, 
   ref, 
@@ -10,10 +9,7 @@ import {
 } from 'firebase/storage';
 import LazyLoad from 'react-lazyload';
 import '../css/Product.css';
-
 import { useAuth } from '../contex/theam';
-
-
 
 const Product = () => {
   const [useruid, setUseruid] = useState(null);
@@ -26,16 +22,15 @@ const Product = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [filterType, setFilterType] = useState('sku'); // Default filter type
   const [searchTerm, setSearchTerm] = useState('');
-  const {currentUseruid} = useAuth()
+  const { currentUseruid } = useAuth();
   const storage = getStorage();
-  
-console.log(currentUseruid)
+
+  // Update user UID and load folders on user login
   useEffect(() => {
-    if(currentUseruid){
-       setUseruid(currentUseruid)
-       loadUserFolders(currentUseruid);
-    }
-    else{
+    if (currentUseruid) {
+      setUseruid(currentUseruid);
+      loadUserFolders(currentUseruid);
+    } else {
       setUseruid(null);
     }
 
@@ -44,207 +39,130 @@ console.log(currentUseruid)
     };
 
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, [currentUseruid]);
 
-  const loadUserFolders = (user) => {
+  const loadUserFolders = useCallback((user) => {
     const userFolderRef = ref(storage, `users/${user}/`);
-
     listAll(userFolderRef)
-      .then((result) => {
-        const folderPromises = result.prefixes.map((folderRef) => {
-          return listAll(folderRef).then((items) => {
-            const mediaItem = items.items.find((item) =>
-              item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
-            );
+      .then(async (result) => {
+        const folderPromises = result.prefixes.map(async (folderRef) => {
+          const mediaItem = (await listAll(folderRef)).items.find((item) =>
+            item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
+          );
 
-            let folderPromise = Promise.resolve({
+          let folderPromise = Promise.resolve({
+            name: folderRef.name,
+            thumbnail: '',
+            isVideo: false,
+          });
+
+          if (mediaItem) {
+            folderPromise = getDownloadURL(mediaItem).then((url) => ({
               name: folderRef.name,
-              thumbnail: '',
-              isVideo: false,
-            });
-
-            if (mediaItem) {
-              folderPromise = getDownloadURL(mediaItem)
-                .then((url) => {
-                  const isVideo = /\.(mov|mp4)$/i.test(mediaItem.name);
-                  return {
-                    name: folderRef.name,
-                    thumbnail: url,
-                    isVideo,
-                  };
-                })
-                .catch((error) => {
-                  console.error('Error fetching media URL:', error);
-                  return { name: folderRef.name, thumbnail: '', isVideo: false };
-                });
-            }
-
-            // Fetch metadata for each folder
-            const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
-            const metadataPromise = getDownloadURL(metadataFileRef)
-              .then((url) => {
-                return fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`)
-                  .then((response) => response.json())
-                  .then((data) => ({
-                    ...data,
-                    folderName: folderRef.name,
-                  }))
-                  .catch((error) => {
-                    console.error('Error parsing metadata JSON:', error);
-                    return {
-                      title: '',
-                      description: '',
-                      price: '',
-                      quantity: '',
-                      type: '',
-                      folderName: folderRef.name,
-                    };
-                  });
-              })
-              .catch((error) => {
-                console.error('Error fetching metadata JSON file:', error);
-                return {
-                  title: '',
-                  description: '',
-                  price: '',
-                  quantity: '',
-                  type: '',
-                  folderName: folderRef.name,
-                };
-              });
-
-            return Promise.all([folderPromise, metadataPromise]).then(([folder, metadata]) => {
-              setMetadata((prevMetadata) => ({
-                ...prevMetadata,
-                [folderRef.name]: metadata,
-              }));
-              return folder;
-            });
-          });
-        });
-
-        Promise.all(folderPromises)
-          .then(setFolders)
-          .catch((error) => {
-            console.error('Error loading folders: ', error);
-          });
-      })
-      .catch((error) => {
-        console.error('Error listing folders: ', error);
-      });
-  };
-
-  const handleFolderClick = (folderName) => {
-    const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
-
-    listAll(folderRef)
-      .then((result) => {
-        const filePromises = result.items
-          .filter((itemRef) => !itemRef.name.endsWith('.json'))
-          .map((itemRef) => {
-            return getDownloadURL(itemRef)
-              .then((url) => ({
-                name: itemRef.name,
-                url,
-                type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
-              }))
-              .catch((error) => {
-                console.error('Error fetching file URL:', error);
-                return { name: itemRef.name, url: '', type: 'image' };
-              });
-          });
-
-        Promise.all(filePromises).then((files) => {
-          setFolderContent(files);
-          setMainMedia(files[0] || { url: '', type: 'image' });
-        });
-
-        const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
-        getDownloadURL(metadataFileRef)
-          .then((url) => {
-            fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`)
-              .then((response) => response.json())
-              .then((data) => {
-                setMetadata((prevMetadata) => ({
-                  ...prevMetadata,
-                  [folderName]: data,
-                }));
-              })
-              .catch((error) => {
-                console.error('Error parsing metadata JSON:', error);
-                setMetadata((prevMetadata) => ({
-                  ...prevMetadata,
-                  [folderName]: { title: '', description: '', price: '', quantity: '', type: '' },
-                }));
-              });
-          })
-          .catch((error) => {
-            console.error('Error fetching metadata JSON file:', error);
-            setMetadata((prevMetadata) => ({
-              ...prevMetadata,
-              [folderName]: { title: '', description: '', price: '', quantity: '', type: '' },
+              thumbnail: url,
+              isVideo: /\.(mov|mp4)$/i.test(mediaItem.name),
             }));
+          }
+
+          // Fetch metadata
+          const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
+          const metadataPromise = getDownloadURL(metadataFileRef)
+            .then((url) => fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`))
+            .then((response) => response.json())
+            .then((data) => ({ ...data, folderName: folderRef.name }))
+            .catch(() => ({
+              title: '',
+              description: '',
+              price: '',
+              quantity: '',
+              type: '',
+              folderName: folderRef.name,
+            }));
+
+          return Promise.all([folderPromise, metadataPromise]).then(([folder, metadata]) => {
+            setMetadata((prev) => ({
+              ...prev,
+              [folderRef.name]: metadata,
+            }));
+            return folder;
           });
+        });
+
+        const foldersData = await Promise.all(folderPromises);
+        setFolders(foldersData);
       })
-      .catch((error) => {
-        console.error('Error listing folder content: ', error);
+      .catch((error) => console.error('Error loading folders: ', error));
+  }, [storage]);
+
+  const handleFolderClick = async (folderName) => {
+    const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
+    const result = await listAll(folderRef);
+    const files = await Promise.all(
+      result.items
+        .filter((itemRef) => !itemRef.name.endsWith('.json'))
+        .map(async (itemRef) => {
+          const url = await getDownloadURL(itemRef);
+          return {
+            name: itemRef.name,
+            url,
+            type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
+          };
+        })
+    );
+
+    setFolderContent(files);
+    setMainMedia(files[0] || { url: '', type: 'image' });
+
+    const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
+    getDownloadURL(metadataFileRef)
+      .then((url) => fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`))
+      .then((response) => response.json())
+      .then((data) => {
+        setMetadata((prev) => ({
+          ...prev,
+          [folderName]: data,
+        }));
+      })
+      .catch(() => {
+        setMetadata((prev) => ({
+          ...prev,
+          [folderName]: { title: '', description: '', price: '', quantity: '', type: '' },
+        }));
       });
 
     setSelectedFolder(folderName);
   };
 
   const handleMetadataChange = (e) => {
+    const { name, value } = e.target;
     setMetadata((prevMetadata) => ({
       ...prevMetadata,
       [selectedFolder]: {
         ...prevMetadata[selectedFolder],
-        [e.target.name]: e.target.value,
+        [name]: value,
       },
     }));
   };
 
-  const handleSaveMetadata = () => {
+  const handleSaveMetadata = async () => {
     if (!selectedFolder) return;
 
     const metadataJson = JSON.stringify(metadata[selectedFolder]);
     const metadataFileRef = ref(storage, `users/${useruid}/${selectedFolder}/${selectedFolder}.json`);
 
-    uploadString(metadataFileRef, metadataJson, 'raw', {
-      contentType: 'application/json',
-    })
-      .then(() => {
-        alert('Metadata updated successfully!');
-      })
-      .catch((error) => {
-        console.error('Error updating metadata:', error);
-      });
-  };
-
-  const handleBackButtonClick = () => {
-    setSelectedFolder(null);
-  };
-
-  // Function to delete a folder recursively
-  const deleteFolderRecursively = async (folderRef) => {
     try {
-      const result = await listAll(folderRef);
-      // Delete all files
-      const deletePromises = result.items.map((item) => deleteObject(item));
-      await Promise.all(deletePromises);
-
-      // Recursively delete subfolders
-      const deleteFolderPromises = result.prefixes.map((subFolderRef) => deleteFolderRecursively(subFolderRef));
-      await Promise.all(deleteFolderPromises);
-
-      console.log(`Deleted folder: ${folderRef.fullPath}`);
+      await uploadString(metadataFileRef, metadataJson, 'raw', { contentType: 'application/json' });
+      alert('Metadata updated successfully!');
     } catch (error) {
-      console.error(`Error deleting folder ${folderRef.fullPath}:`, error);
-      throw error;
+      console.error('Error updating metadata:', error);
     }
+  };
+
+  const deleteFolderRecursively = async (folderRef) => {
+    const result = await listAll(folderRef);
+    await Promise.all(result.items.map((item) => deleteObject(item)));
+    await Promise.all(result.prefixes.map((subFolderRef) => deleteFolderRecursively(subFolderRef)));
   };
 
   const handleDeleteFolder = async (folderName) => {
@@ -252,12 +170,9 @@ console.log(currentUseruid)
     if (!confirmDelete) return;
 
     const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
-
     try {
       await deleteFolderRecursively(folderRef);
       alert(`SKU folder "${folderName}" has been deleted successfully.`);
-
-      // Update state to remove the deleted folder
       setFolders((prevFolders) => prevFolders.filter((folder) => folder.name !== folderName));
       setMetadata((prevMetadata) => {
         const newMetadata = { ...prevMetadata };
@@ -265,7 +180,6 @@ console.log(currentUseruid)
         return newMetadata;
       });
 
-      // If the deleted folder was selected, reset the selection
       if (selectedFolder === folderName) {
         setSelectedFolder(null);
         setFolderContent([]);
@@ -276,14 +190,11 @@ console.log(currentUseruid)
     }
   };
 
-  // Filter folders based on selected criteria
   const filteredFolders = folders.filter((folder) => {
     const folderMetadata = metadata[folder.name] || {};
     const valueToFilterBy = filterType === 'sku' ? folder.name : folderMetadata[filterType] || '';
     return valueToFilterBy.toLowerCase().includes(searchTerm.toLowerCase());
   });
-
-
 
   if (!useruid) {
     return <div>Please log in to view your products.</div>;
@@ -292,12 +203,11 @@ console.log(currentUseruid)
   return (
     <div>
       {selectedFolder && (
-        <button className="back-button" onClick={handleBackButtonClick}>
+        <button className="back-button" onClick={() => setSelectedFolder(null)}>
           Back
         </button>
       )}
 
-      {/* Conditional Rendering of the Filtering Section */}
       {!selectedFolder && (
         <div className="filter-container">
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
@@ -306,23 +216,17 @@ console.log(currentUseruid)
             <option value="type">Type</option>
           </select>
 
-
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
-
-          <div class="search-container">
-  
-           <i class="fas fa-search search-icon"></i>
-
-
-          <input
-            type="text"
-            placeholder={`Search by ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}     
-
-            className="filter-input"
-
-          />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+          
+          <div className="search-container">
+            <i className="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              placeholder={`Search by ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}     
+              className="filter-input"
+            />
           </div>
           <button
             onClick={() => {
@@ -331,8 +235,7 @@ console.log(currentUseruid)
             }}
             className="clear-button"
           >
-             <i className="fas fa-eraser" style={{ marginRight: '8px' }}></i> 
-
+            <i className="fas fa-eraser" style={{ marginRight: '8px' }}></i> 
             Clear Filters
           </button>
         </div>
@@ -392,15 +295,12 @@ console.log(currentUseruid)
                     <td>{metadata[folder.name]?.price || ''}</td>
                     <td>{metadata[folder.name]?.quantity || ''}</td>
                     <td>
-                    <button 
-  className="delete-button" 
-  onClick={() => handleDeleteFolder(folder.name)}
->
-  Delete {/* Text first */}
-  <i className="fas fa-trash" style={{ marginLeft: '8px' }}></i> {/* Trash icon after text */}
-</button>
-
-                      
+                      <button 
+                        className="delete-button" 
+                        onClick={() => handleDeleteFolder(folder.name)}
+                      >
+                        Delete <i className="fas fa-trash" style={{ marginLeft: '8px' }}></i>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -480,5 +380,3 @@ console.log(currentUseruid)
 };
 
 export default Product;
-
-
