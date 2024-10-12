@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { 
   getStorage, 
   ref, 
@@ -12,8 +11,12 @@ import {
 import LazyLoad from 'react-lazyload';
 import '../css/Product.css';
 
+import { useAuth } from '../contex/theam';
+
+
+
 const Product = () => {
-  const [user, setUser] = useState(null);
+  const [useruid, setUseruid] = useState(null);
   const [loading, setLoading] = useState(true);
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -23,21 +26,18 @@ const Product = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [filterType, setFilterType] = useState('sku'); // Default filter type
   const [searchTerm, setSearchTerm] = useState('');
-
+  const {currentUseruid} = useAuth()
   const storage = getStorage();
-  const auth = getAuth();
-
+  
+console.log(currentUseruid)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('User state changed:', user);
-      if (user) {
-        setUser(user);
-        loadUserFolders(user);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    if(currentUseruid){
+       setUseruid(currentUseruid)
+       loadUserFolders(currentUseruid);
+    }
+    else{
+      setUseruid(null);
+    }
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -46,13 +46,12 @@ const Product = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      unsubscribe();
       window.removeEventListener('resize', handleResize);
     };
-  }, [auth]);
+  }, [currentUseruid]);
 
   const loadUserFolders = (user) => {
-    const userFolderRef = ref(storage, `users/${user.uid}/`);
+    const userFolderRef = ref(storage, `users/${user}/`);
 
     listAll(userFolderRef)
       .then((result) => {
@@ -85,7 +84,7 @@ const Product = () => {
             }
 
             // Fetch metadata for each folder
-            const metadataFileRef = ref(storage, `users/${user.uid}/${folderRef.name}/${folderRef.name}.json`);
+            const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
             const metadataPromise = getDownloadURL(metadataFileRef)
               .then((url) => {
                 return fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`)
@@ -140,7 +139,7 @@ const Product = () => {
   };
 
   const handleFolderClick = (folderName) => {
-    const folderRef = ref(storage, `users/${user.uid}/${folderName}/`);
+    const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
 
     listAll(folderRef)
       .then((result) => {
@@ -164,7 +163,7 @@ const Product = () => {
           setMainMedia(files[0] || { url: '', type: 'image' });
         });
 
-        const metadataFileRef = ref(storage, `users/${user.uid}/${folderName}/${folderName}.json`);
+        const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
         getDownloadURL(metadataFileRef)
           .then((url) => {
             fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`)
@@ -212,7 +211,7 @@ const Product = () => {
     if (!selectedFolder) return;
 
     const metadataJson = JSON.stringify(metadata[selectedFolder]);
-    const metadataFileRef = ref(storage, `users/${user.uid}/${selectedFolder}/${selectedFolder}.json`);
+    const metadataFileRef = ref(storage, `users/${useruid}/${selectedFolder}/${selectedFolder}.json`);
 
     uploadString(metadataFileRef, metadataJson, 'raw', {
       contentType: 'application/json',
@@ -252,7 +251,7 @@ const Product = () => {
     const confirmDelete = window.confirm(`Are you sure you want to delete the SKU folder "${folderName}"? This action cannot be undone.`);
     if (!confirmDelete) return;
 
-    const folderRef = ref(storage, `users/${user.uid}/${folderName}/`);
+    const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
 
     try {
       await deleteFolderRecursively(folderRef);
@@ -284,11 +283,9 @@ const Product = () => {
     return valueToFilterBy.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
-  if (!user) {
+
+  if (!useruid) {
     return <div>Please log in to view your products.</div>;
   }
 
@@ -483,3 +480,5 @@ const Product = () => {
 };
 
 export default Product;
+
+

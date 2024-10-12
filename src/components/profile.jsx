@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from './firebase'; // Import your Firebase setup
 import '../css/ProfilePage.css'; // Import the CSS file
+import { useAuth } from '../contex/theam';
 
 const UserProfile = () => {
   const [user, setUser] = useState({
@@ -22,29 +23,34 @@ const UserProfile = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { currentUseruid } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-      if (currentUser) {
-        const userId = currentUser.uid; // Get the UID of the logged-in user
-        await fetchUserData(userId); // Fetch user data based on UID
-      } else {
-        setError('Please log in'); // Show login prompt if no user is logged in
-      }
-      setLoading(false); // Stop loading state
-    });
-
-    return () => unsubscribe(); // Cleanup subscription on component unmount
-  }, []);
+    // Check if user is authenticated
+    if (currentUseruid) {
+      fetchUserData(currentUseruid);
+    } else {
+      setLoading(false); // Set loading to false even if not authenticated
+      setError('Please log in');
+    }
+  }, [currentUseruid]);
 
   const fetchUserData = async (userId) => {
-    const userDoc = doc(db, 'Users', userId); // Reference to the user document in Firestore
-    const docSnapshot = await getDoc(userDoc);
+    setLoading(true); // Set loading true while fetching user data
+    try {
+      const userDoc = doc(db, 'Users', userId); // Reference to the user document in Firestore
+      const docSnapshot = await getDoc(userDoc);
 
-    if (docSnapshot.exists()) {
-      setUser(docSnapshot.data()); // Set user data
-    } else {
-      setError('User data not found');
+      if (docSnapshot.exists()) {
+        setUser(docSnapshot.data()); // Set user data
+        setError(null); // Reset error
+      } else {
+        setError('User data not found');
+      }
+    } catch (err) {
+      setError('Failed to fetch user data');
+    } finally {
+      setLoading(false); // Set loading false after fetch is complete
     }
   };
 

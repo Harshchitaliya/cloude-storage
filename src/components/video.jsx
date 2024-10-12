@@ -1,29 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import "../css/video.css"
+import { useAuth } from "../contex/theam";
+
 
 
 const VideoModule = () => {
-  const [user, setUser] = useState(null);
+
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [message, setMessage] = useState("");
-
-  const auth = getAuth();
+  const {currentUseruid} = useAuth()
+  
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        displayUserVideos(user.uid);
-      } else {
-        setUser(null);
-      }
-    });
-  }, [auth]);
+
+    if(currentUseruid){
+      displayUserVideos(currentUseruid);
+    }
+  }, [currentUseruid]);
 
   const displayUserVideos = async (uid) => {
     const userFolderRef = ref(storage, `users/${uid}`);
@@ -75,7 +72,7 @@ const VideoModule = () => {
       await deleteObject(videoRef);
       setMessage("Video deleted successfully.");
       setSidePanelOpen(false);
-      displayUserVideos(user.uid);
+      displayUserVideos(currentUseruid);
     } catch (error) {
       setMessage("Error deleting the video.");
     }
@@ -100,7 +97,7 @@ const VideoModule = () => {
 
   return (
     <div className="video-module">
-      {user ? (
+      {currentUseruid ? (
         <>
           {message && <p className="message">{message}</p>}
           <div className="video-gallery">
@@ -109,7 +106,7 @@ const VideoModule = () => {
                 <video src={video.url} controls width="200" />
                 <p>SKU: {video.sku}</p>
                 <div className="dropdown">
-                  <button className="more-options">
+                  <button className="more-options" onClick={(e) => e.stopPropagation()}>
                     <span>⋮</span>
                   </button>
                   <div className="dropdown-menu">

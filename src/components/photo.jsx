@@ -1,13 +1,10 @@
-
 import React, { useState, useEffect } from "react";
-
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import '../css/photo.css'; // Import CSS for styling
 import { useAuth } from "../contex/theam";
 
 const PhotoModule = () => {
- 
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [message, setMessage] = useState("");
@@ -16,11 +13,8 @@ const PhotoModule = () => {
   const { currentUseruid } = useAuth();
 
   useEffect(() => {
-    
-
-    if(currentUseruid){
+    if (currentUseruid) {
       displayUserImages(currentUseruid);
-      
     }
   }, [currentUseruid]);
 
@@ -108,7 +102,10 @@ const PhotoModule = () => {
                 <img src={image.url} alt={`SKU: ${image.sku}`} />
                 <p>SKU: {image.sku}</p>
                 <div className="dropdown">
-                  <button className="more-options">
+                  <button 
+                    className="more-options" 
+                    onClick={(e) => e.stopPropagation()} // Stop event propagation here
+                  >
                     <span>⋮</span>
                   </button>
                   <div className="dropdown-menu">
