@@ -41,7 +41,7 @@ const NavBar = React.memo(() => {
             <li className="nav-item">
               <Link className="nav-link" to="/Delete">
                 <FontAwesomeIcon icon={faTrash} style={{ marginRight: '8px' }} />
-                Delete
+                Recycle Bin
               </Link>
             </li>
             <li className="nav-item">

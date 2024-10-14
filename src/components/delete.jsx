@@ -1,181 +1,174 @@
-import React, { useEffect, useState } from 'react';
-import { ref, listAll, getDownloadURL, deleteObject, uploadBytesResumable } from 'firebase/storage';
-import { storage } from './firebase'; // Your Firebase config
-
-const fetchRecycleBinItems = async (uid) => {
-  try {
-    const recycleBinRef = ref(storage, `users/${uid}/recycle_bin/`);
-    const recycleList = await listAll(recycleBinRef);
-
-    const recycleURLs = await Promise.all(recycleList.items.map(async (item) => {
-      try {
-        const url = await getDownloadURL(item);
-        return { url, name: item.name };
-      } catch (error) {
-        console.error('Error getting download URL:', error);
-        return null;
-      }
-    }));
-
-    return recycleURLs.filter(item => item !== null);
-  } catch (error) {
-    console.error('Error fetching recycle bin items:', error);
-    return [];
-  }
-};
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  ref,
+  listAll,
+  getDownloadURL,
+  deleteObject,
+  uploadBytes,
+} from "firebase/storage";
+import { storage } from "./firebase"; // Your Firebase config
+import { useAuth } from "../contex/theam";
+import "../css/delete.css"; // Import CSS for styling
 
 const DeleteItem = () => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(null); // Tracks which menu is open
+  const [recycledMedia, setRecycledMedia] = useState([]);
+  const [loading, setLoading] = useState(false); // Overall loading state
+  const [restoring, setRestoring] = useState(false); // State for individual restore operation
+  const { currentUseruid } = useAuth();
 
   useEffect(() => {
-    const storedUID = localStorage.getItem('uid');
-    if (storedUID) {
-      fetchRecycleBinItems(storedUID).then((recycleItems) => {
-        setItems(recycleItems);
-        setLoading(false);
-      });
-    } else {
-      setLoading(false);
+    if (currentUseruid) {
+      setLoading(true);
+      displayRecycledMedia(currentUseruid).then(() => setLoading(false));
+    }
+  }, [currentUseruid]);
+
+  const displayRecycledMedia = useCallback(async (uid) => {
+    try {
+      const userFolderRef = ref(storage, `users/${uid}`);
+      const result = await listAll(userFolderRef);
+
+      const allMedia = await Promise.all(
+        result.prefixes.map(async (skuFolderRef) => {
+          const mediaResult = await listAll(skuFolderRef);
+          const sku = skuFolderRef.name;
+
+          const media = await Promise.all(
+            mediaResult.items.map(async (itemRef) => {
+              // **Only include files that start with 'recycle_'**
+              if (itemRef.name.startsWith("recycle_")) {
+                const url = await getDownloadURL(itemRef);
+                if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
+                  return {
+                    type: "image",
+                    url,
+                    sku,
+                    fullPath: itemRef.fullPath,
+                    originalName: itemRef.name.replace(/^recycle_/, ""), // Remove 'recycle_' prefix
+                  };
+                } else if (itemRef.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
+                  return {
+                    type: "video",
+                    url,
+                    sku,
+                    fullPath: itemRef.fullPath,
+                    originalName: itemRef.name.replace(/^recycle_/, ""),
+                  };
+                }
+              }
+              return null;
+            })
+          );
+
+          return media.filter((item) => item !== null);
+        })
+      );
+
+      setRecycledMedia(allMedia.flat());
+    } catch (error) {
+      console.error("Error fetching recycled media:", error);
     }
   }, []);
 
-  const handleRestore = async (item) => {
-    try {
-      const uid = localStorage.getItem('uid');
-      const recycleBinRef = ref(storage, `users/${uid}/recycle_bin/${item.name}`);
-      const originalRef = ref(storage, `users/${uid}/${item.name}`);
+  const restoreMedia = async (media) => {
+    setRestoring(true); // Start restore loading state
+    const recycledRef = ref(storage, media.fullPath);
+    const originalRef = ref(
+      storage,
+      `${recycledRef.parent.fullPath}/${media.originalName}`
+    );
 
-      // Step 1: Download the item content from recycle bin
-      const response = await fetch(item.url, { mode: 'no-cors' });
+    try {
+      // Get the file's blob
+      const response = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(media.url)}`)
       const blob = await response.blob();
 
-      // Step 2: Upload the item back to its original location
-      const uploadResult = await uploadBytesResumable(originalRef, blob);
-      console.log('Item restored:', uploadResult);
+      // Upload the file without 'recycle_' in its name
+      await uploadBytes(originalRef, blob);
+      console.log(`${media.type} restored successfully.`);
 
-      // Step 3: Delete the item from recycle bin
-      await deleteObject(recycleBinRef);
-      console.log('Item removed from recycle bin:', item.name);
+      // Delete the recycled file
+      await deleteObject(recycledRef);
+      console.log(`Recycled ${media.type} deleted successfully.`);
 
-      // Update the state to remove the restored item
-      setItems(items.filter(i => i.name !== item.name));
+      // Show success alert
+      alert(`${media.type} restored successfully!`);
+
+      // Refresh the recycled media list
+      await displayRecycledMedia(currentUseruid);
     } catch (error) {
-      console.error('Error restoring item:', error);
+      console.error(`Error restoring the ${media.type}:`, error);
+    } finally {
+      setRestoring(false); // Stop restore loading state
     }
   };
 
-  const handleDeletePermanently = async (item) => {
+  const deleteMedia = async (media) => {
+    const recycledRef = ref(storage, media.fullPath);
+
     try {
-      const uid = localStorage.getItem('uid');
-      const recycleBinRef = ref(storage, `users/${uid}/recycle_bin/${item.name}`);
+      // Delete the recycled file permanently
+      await deleteObject(recycledRef);
+      console.log(`${media.type} deleted permanently.`);
 
-      // Permanently delete the item from recycle bin
-      await deleteObject(recycleBinRef);
-      console.log('Item permanently deleted:', item.name);
-
-      // Update the state to remove the deleted item
-      setItems(items.filter(i => i.name !== item.name));
+      // Refresh the recycled media list
+      setLoading(true);
+      await displayRecycledMedia(currentUseruid);
+      setLoading(false);
     } catch (error) {
-      console.error('Error deleting item permanently:', error);
+      console.error(`Error deleting the ${media.type}:`, error);
     }
   };
-
-  const toggleMenu = (item) => {
-    setMenuOpen(menuOpen === item.name ? null : item.name);
-  };
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
 
   return (
-    <div style={styles.container}>
-      {items.length > 0 ? (
-        <div style={styles.galleryContainer}>
-          {items.map((item, index) => (
-            <div key={index} style={styles.itemContainer}>
-              {item.url.endsWith('.mp4') || item.url.endsWith('.mov') ? (
-                <video src={item.url} controls style={styles.media} />
-              ) : (
-                <img src={item.url} alt={`Recycle Item ${index}`} style={styles.media} />
-              )}
-              <div style={styles.tripleDot} onClick={() => toggleMenu(item)}>&#x22EE;</div>
-              {menuOpen === item.name && (
-                <div style={styles.menu}>
-                  <button style={styles.menuItem} onClick={() => handleRestore(item)}>Restore</button>
-                  <button style={{ ...styles.menuItem, ...styles.deleteButton }} onClick={() => handleDeletePermanently(item)}>Delete Permanently</button>
+    <div className="recycle-module">
+      {currentUseruid ? (
+        <>
+          {loading ? (
+            <p>Loading recycled media...</p>
+          ) : recycledMedia.length === 0 ? (
+            <p>No recycled media found.</p>
+          ) : (
+            <div className="media-gallery">
+              {recycledMedia.map((item, index) => (
+                <div key={index} className="media-card">
+                  {item.type === "image" ? (
+                    <img
+                      src={item.url}
+                      alt={`SKU: ${item.sku}`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <video src={item.url} controls width="200" loading="lazy" />
+                  )}
+                  <p>SKU: {item.sku}</p>
+                  <div className="dropdown">
+                    <button className="more-options">
+                      <span>⋮</span>
+                    </button>
+                    <div className="dropdown-menu">
+                      <button onClick={() => restoreMedia(item)}>
+                        {restoring ? (
+                          <div className="spinner"></div>
+                        ) : (
+                          <span>♻ Restore</span>
+                        )}
+                      </button>
+                      <button onClick={() => deleteMedia(item)}>
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <p style={styles.itemName}>{item.name}</p>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       ) : (
-        <p>No items in recycle bin</p>
+        <h1>Please log in to view recycled media.</h1>
       )}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: '20px',
-  },
-  galleryContainer: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '15px',
-  },
-  itemContainer: {
-    position: 'relative',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '12px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-  },
-  media: {
-    width: '100%',
-    height: 'auto',
-    borderRadius: '12px',
-  },
-  tripleDot: {
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
-    zIndex: 1,
-    cursor: 'pointer',
-    fontSize: '24px',
-  },
-  menu: {
-    position: 'absolute',
-    top: '40px',
-    right: '10px',
-    zIndex: 2,
-    background: '#333',
-    border: '1px solid #444',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    padding: '0',
-    width: '160px',
-  },
-  menuItem: {
-    padding: '10px 20px',
-    textAlign: 'left',
-    background: '#333',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    borderBottom: '1px solid #444',
-    color: '#fff',
-  },
-  deleteButton: {
-    color: 'red',
-  },
-  itemName: {
-    textAlign: 'center',
-    padding: '5px 0',
-  },
 };
 
 export default DeleteItem;

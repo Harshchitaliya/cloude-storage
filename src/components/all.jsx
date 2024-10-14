@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, listAll, getDownloadURL, deleteObject, uploadBytes } from "firebase/storage";
 import { storage } from "./firebase"; // Your Firebase config
 import "../css/all.css"; // Import CSS for styling
 import { useAuth } from "../contex/theam";
@@ -32,6 +32,11 @@ const MediaModule = () => {
 
           const media = await Promise.all(
             mediaResult.items.map(async (itemRef) => {
+              // **Exclude files that start with 'recycle'**
+              if (itemRef.name.startsWith("recycle")) {
+                return null;
+              }
+
               if (!itemRef.name.endsWith(".json")) {
                 const url = await getDownloadURL(itemRef);
                 if (itemRef.name.match(/\.(jpeg|jpg|png)$/i)) {
@@ -76,16 +81,30 @@ const MediaModule = () => {
   };
 
   const deleteMedia = async (media) => {
-    const mediaRef = ref(storage, media.fullPath);
+    const originalRef = ref(storage, media.fullPath);
+    const originalName = originalRef.name;
+    const recycledName = `recycle_${originalName}`;
+    const recycledRef = ref(storage, `${originalRef.parent.fullPath}/${recycledName}`);
+
     try {
-      await deleteObject(mediaRef);
+      // Get the file's blob
+      const response = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(media.url)}`)
+      const blob = await response.blob();
+
+      // Upload the file with the new 'recycle' prefixed name
+      await uploadBytes(recycledRef, blob);
+      console.log(`Recycled ${media.type} as ${recycledName} successfully.`);
+
+      // Delete the original file
+      await deleteObject(originalRef);
       console.log(`${media.type} deleted successfully.`);
+
       setSidePanelOpen(false);
       setLoading(true);
       await displayUserMedia(currentUseruid);
       setLoading(false);
     } catch (error) {
-      console.error(`Error deleting the ${media.type}:`, error);
+      console.error(`Error recycling the ${media.type}:`, error);
     }
   };
 
@@ -124,7 +143,12 @@ const MediaModule = () => {
                   )}
                   <p>SKU: {item.sku}</p>
                   <div className="dropdown">
-                    <button className="more-options" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="more-options"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <span>⋮</span>
                     </button>
                     <div className="dropdown-menu">
@@ -142,7 +166,7 @@ const MediaModule = () => {
                           deleteMedia(item);
                         }}
                       >
-                        🗑 Delete
+                        🗑 Recycle
                       </button>
                       <button
                         onClick={(e) => {

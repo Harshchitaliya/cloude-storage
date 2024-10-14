@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from './firebase'; // Import your Firebase setup
+import { db } from './firebase'; // Import your Firebase setup
 import '../css/ProfilePage.css'; // Import the CSS file
 import { useAuth } from '../contex/theam';
 
@@ -36,24 +36,25 @@ const UserProfile = () => {
   }, [currentUseruid]);
 
   const fetchUserData = async (userId) => {
-    setLoading(true); // Set loading true while fetching user data
+    setLoading(true);
     try {
-      const userDoc = doc(db, 'Users', userId); // Reference to the user document in Firestore
+      const userDoc = doc(db, 'Users', userId);
       const docSnapshot = await getDoc(userDoc);
-
+  
       if (docSnapshot.exists()) {
-        setUser(docSnapshot.data()); // Set user data
-        setError(null); // Reset error
+        setUser(docSnapshot.data());
+        setError(null);
       } else {
         setError('User data not found');
       }
     } catch (err) {
+      console.error('Firestore error:', err);
       setError('Failed to fetch user data');
     } finally {
-      setLoading(false); // Set loading false after fetch is complete
+      setLoading(false);
     }
   };
-
+  
   const handleChange = (e) => {
     setUser({
       ...user,
@@ -66,8 +67,8 @@ const UserProfile = () => {
   };
 
   const handleSave = async (field) => {
-    const userId = auth.currentUser.uid; // Get the UID of the logged-in user
-    const userDoc = doc(db, 'Users', userId);
+    
+    const userDoc = doc(db, 'Users', currentUseruid);
     await updateDoc(userDoc, { [field]: user[field] });
     setIsEditing((prev) => ({ ...prev, [field]: false }));
   };

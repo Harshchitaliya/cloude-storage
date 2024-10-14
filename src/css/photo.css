@@ -117,10 +117,23 @@
 }
 
 .more-options {
-  background: transparent;
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background for a cleaner look */
+  color: #333; /* Dark gray for the dots */
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
+  border-radius: 10%; /* Circle shape */
+  padding: 8px; /* More padding for a better click area */
+  outline: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+}
+
+.more-options:hover,
+.more-options:focus {
+  background-color: rgba(255, 255, 255, 1); /* Fully opaque white on hover */
+  color: #000; /* Darker color for hover state */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Slightly deeper shadow on hover */
 }
 
 .dropdown-menu {
@@ -136,11 +149,7 @@
   min-width: 150px;
 }
 
-.more-options:focus + .dropdown-menu,
-.dropdown-menu:hover,
-.more-options:focus-within + .dropdown-menu {
-  display: block;
-}
+
 
 .dropdown-menu button {
   display: block;
