@@ -15,6 +15,9 @@ const DeleteItem = () => {
   const [loading, setLoading] = useState(false); // Overall loading state
   const [restoring, setRestoring] = useState(false); // State for individual restore operation
   const { currentUseruid } = useAuth();
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
 
   useEffect(() => {
     if (currentUseruid) {
@@ -120,6 +123,69 @@ const DeleteItem = () => {
     }
   };
 
+
+  const handleSelectItem = (e, item) => {
+    e.stopPropagation();
+    const updatedSelection = new Set(selectedItems);
+    if (e.target.checked) {
+      updatedSelection.add(item);
+    } else {
+      updatedSelection.delete(item);
+    }
+    setSelectedItems(updatedSelection);
+    setSelectAll(updatedSelection.size === recycledMedia.length);
+  };
+
+  // Select/Unselect all items
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedItems(new Set(recycledMedia));
+    } else {
+      setSelectedItems(new Set());
+    }
+    setSelectAll(e.target.checked);
+  };
+
+
+  const restoreSelectedMedia = async () => {
+    setRestoring(true);
+    try {
+      await Promise.all(Array.from(selectedItems).map(restoreMedia));
+      alert("Selected items restored successfully!");
+      setSelectedItems(new Set());
+      setSelectAll(false);
+      await displayRecycledMedia(currentUseruid);
+    } catch (error) {
+      console.error("Error restoring selected items:", error);
+      alert("An error occurred while restoring selected items.");
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  // Batch delete
+  const deleteSelectedMedia = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to permanently delete the selected items?"
+    );
+    if (!confirmDelete) return;
+
+    setLoading(true);
+    try {
+      await Promise.all(Array.from(selectedItems).map(deleteMedia));
+      alert("Selected items deleted permanently!");
+      setSelectedItems(new Set());
+      setSelectAll(false);
+      await displayRecycledMedia(currentUseruid);
+    } catch (error) {
+      console.error("Error deleting selected items:", error);
+      alert("An error occurred while deleting selected items.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="recycle-module">
       {currentUseruid ? (
@@ -129,39 +195,75 @@ const DeleteItem = () => {
           ) : recycledMedia.length === 0 ? (
             <p>No recycled media found.</p>
           ) : (
-            <div className="media-gallery">
-              {recycledMedia.map((item, index) => (
-                <div key={index} className="media-card">
-                  {item.type === "image" ? (
-                    <img
-                      src={item.url}
-                      alt={`SKU: ${item.sku}`}
-                      loading="lazy"
+            <>
+              {selectedItems.size > 0 && (
+                <div className="batch-toolbar">
+                  <div className="toolbar-left">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="select-all-checkbox"
                     />
-                  ) : (
-                    <video src={item.url} controls width="200" loading="lazy" />
-                  )}
-                  <p>SKU: {item.sku}</p>
-                  <div className="dropdown">
-                    <button className="more-options">
-                      <span>⋮</span>
+                    <span className="media-count">
+                      {selectAll ? "All items selected" : `${selectedItems.size} selected`}
+                    </span>
+                    <button className="unselect-button" onClick={() => setSelectedItems(new Set())}>
+                      Unselect
                     </button>
-                    <div className="dropdown-menu">
-                      <button onClick={() => restoreMedia(item)}>
-                        {restoring ? (
-                          <div className="spinner"></div>
-                        ) : (
-                          <span>♻ Restore</span>
-                        )}
-                      </button>
-                      <button onClick={() => deleteMedia(item)}>
-                        🗑 Delete
-                      </button>
-                    </div>
+                  </div>
+                  <div className="toolbar-buttons">
+                    <button onClick={restoreSelectedMedia} className="restore-button">
+                      {restoring ? <div className="spinner"></div> : "♻ Restore Selected"}
+                    </button>
+                    <button onClick={deleteSelectedMedia} className="delete-button">
+                      🗑 Delete Selected
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+              <div className="media-gallery">
+                {recycledMedia.map((item, index) => (
+                  <div key={index} className="media-card">
+                    <div className="checkbox-wrapper">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(item)}
+                        onChange={(e) => handleSelectItem(e, item)}
+                        className="styled-checkbox"
+                      />
+                    </div>
+                    {item.type === "image" ? (
+                      <img
+                        src={item.url}
+                        alt={`SKU: ${item.sku}`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <video src={item.url} controls width="200" loading="lazy" />
+                    )}
+                    <p>SKU: {item.sku}</p>
+                    <div className="dropdown">
+                      <button className="more-options">
+                        <span>⋮</span>
+                      </button>
+                      <div className="dropdown-menu">
+                        <button onClick={() => restoreMedia(item)}>
+                          {restoring ? (
+                            <div className="spinner"></div>
+                          ) : (
+                            <span>♻ Restore</span>
+                          )}
+                        </button>
+                        <button onClick={() => deleteMedia(item)}>
+                          🗑 Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </>
       ) : (
@@ -172,3 +274,6 @@ const DeleteItem = () => {
 };
 
 export default DeleteItem;
+
+
+

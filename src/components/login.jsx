@@ -24,7 +24,7 @@ const LoginForm = () => {
       const user = userCredential.user;
       console.log('Login successful', user.uid);
       localStorage.setItem('uid', user.uid);
-      navigate('/');
+      navigate('/Product');
     } catch (error) {
       const errorMessage = 
         error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found'

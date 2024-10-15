@@ -17,6 +17,9 @@ const VideoModule = () => {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false); // For loading state
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
 
   const { currentUseruid } = useAuth();
 
@@ -146,18 +149,70 @@ const VideoModule = () => {
     }
   };
 
-  // Memoize video gallery to prevent unnecessary re-renders
+  const handleSelectVideo = (e, video) => {
+    e.stopPropagation(); // Prevent opening side panel when clicking checkbox
+    const updatedSelection = new Set(selectedItems);
+    if (e.target.checked) {
+      updatedSelection.add(video);
+    } else {
+      updatedSelection.delete(video);
+    }
+    setSelectedItems(updatedSelection);
+    setSelectAll(updatedSelection.size === videos.length);
+  };
+
+  // Select/Unselect all videos
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedItems(new Set(videos));
+    } else {
+      setSelectedItems(new Set());
+    }
+    setSelectAll(e.target.checked);
+  };
+
+  // Batch Actions
+  const downloadSelected = (items) => {
+    items.forEach((item) => downloadVideo(item.url));
+  };
+
+  const deleteSelectedVideos = async (items) => {
+    setLoading(true);
+    try {
+      await Promise.all(Array.from(items).map((item) => deleteVideo(item)));
+      setSelectedItems(new Set());
+      setSelectAll(false);
+      setMessage("Selected videos recycled successfully.");
+    } catch (error) {
+      console.error("Error recycling selected videos:", error);
+      setMessage("Error recycling selected videos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shareSelected = (items) => {
+    items.forEach((item) => shareVideo(item.url));
+  };
+
+
   const videoGallery = useMemo(() => {
     return videos.map((video, index) => (
       <LazyLoad key={index} height={200} offset={100} once>
         <div className="video-card" onClick={() => openSidePanel(video)}>
+          <div className="checkbox-wrapper">
+            <input
+              type="checkbox"
+              checked={selectedItems.has(video)}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => handleSelectVideo(e, video)}
+              className="styled-checkbox"
+            />
+          </div>
           <video src={video.url} controls width="200" loading="lazy" />
           <p>SKU: {video.sku}</p>
           <div className="dropdown">
-            <button
-              className="more-options"
-              onClick={(e) => e.stopPropagation()} // Stop event propagation here
-            >
+            <button className="more-options" onClick={(e) => e.stopPropagation()}>
               <span>⋮</span>
             </button>
             <div className="dropdown-menu">
@@ -169,17 +224,47 @@ const VideoModule = () => {
         </div>
       </LazyLoad>
     ));
-  }, [videos]);
+  }, [videos, selectedItems]);
 
   return (
     <div className="video-module">
       {currentUseruid ? (
         <>
           {message && <p className="message">{message}</p>}
-          {loading ? <p>Loading videos...</p> : null} {/* Show loading state */}
-          <div className="video-gallery">
-            {videoGallery}
-          </div>
+          {loading ? <p>Loading videos...</p> : null}
+
+          {selectedItems.size > 0 && (
+            <div className="batch-toolbar">
+              <div className="toolbar-left">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="select-all-checkbox"
+                />
+                <span className="media-count">
+                  {selectAll ? "All videos selected" : `${selectedItems.size} selected`}
+                </span>
+                <button className="unselect-button" onClick={() => setSelectedItems(new Set())}>
+                  Unselect
+                </button>
+              </div>
+
+              <div className="toolbar-buttons">
+                <button onClick={() => downloadSelected(selectedItems)} className="download-button">
+                  ⬇ Download
+                </button>
+                <button onClick={() => deleteSelectedVideos(selectedItems)} className="delete-button">
+                  🗑 Delete
+                </button>
+                <button onClick={() => shareSelected(selectedItems)} className="share-button">
+                  📤 Share
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="video-gallery">{videoGallery}</div>
         </>
       ) : (
         <h1>Please log in to view videos.</h1>

@@ -208,12 +208,13 @@ const PhotoModule = () => {
                 <span className="media-count">
                   {selectAll ? "All images selected" : `${selectedItems.size} selected`}
                 </span>
-              </div>
-
-              <div className="toolbar-buttons">
                 <button className="unselect-button" onClick={() => setSelectedItems(new Set())}>
                   Unselect
                 </button>
+              </div>
+
+              <div className="toolbar-buttons">
+                
                 <button onClick={() => downloadSelected(selectedItems)} className="download-button">
                   ⬇ Download
                 </button>

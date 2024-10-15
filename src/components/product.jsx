@@ -25,13 +25,80 @@ const Product = () => {
   const { currentUseruid } = useAuth();
   const storage = getStorage();
 
-  // Update user UID and load folders on user login
+  // **1. Define loadUserFolders before useEffect**
+  const loadUserFolders = useCallback(async (user) => {
+    const userFolderRef = ref(storage, `users/${user}/`);
+    try {
+      const result = await listAll(userFolderRef);
+      const folderPromises = result.prefixes.map(async (folderRef) => {
+        // **Exclude media items starting with 'recycle'**
+        const mediaItems = await listAll(folderRef);
+        const mediaItem = mediaItems.items.find((item) =>
+          !item.name.toLowerCase().startsWith('recycle') &&
+          item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
+        );
+
+        let folder = {
+          name: folderRef.name,
+          thumbnail: '',
+          isVideo: false,
+        };
+
+        if (mediaItem) {
+          const url = await getDownloadURL(mediaItem);
+          folder.thumbnail = url;
+          folder.isVideo = /\.(mov|mp4)$/i.test(mediaItem.name);
+        }
+
+        // Fetch metadata
+        const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
+        let meta = {
+          title: '',
+          description: '',
+          price: '',
+          quantity: '',
+          type: '',
+          folderName: folderRef.name,
+        };
+
+        try {
+          const metadataUrl = await getDownloadURL(metadataFileRef);
+          const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(metadataUrl)}`);
+          const data = await response.json();
+          meta = { ...data, folderName: folderRef.name };
+        } catch (error) {
+          console.warn(`Metadata not found for folder: ${folderRef.name}`, error);
+        }
+
+        setMetadata((prev) => ({
+          ...prev,
+          [folderRef.name]: meta,
+        }));
+
+        return folder;
+      });
+
+      const foldersData = await Promise.all(folderPromises);
+      setFolders(foldersData);
+      setLoading(false); // Set loading to false after folders are loaded
+    } catch (error) {
+      console.error('Error loading folders: ', error);
+      setLoading(false); // Ensure loading is turned off even if there's an error
+    }
+  }, [storage]);
+
+  // **2. Now, use loadUserFolders inside useEffect**
   useEffect(() => {
     if (currentUseruid) {
       setUseruid(currentUseruid);
       loadUserFolders(currentUseruid);
     } else {
       setUseruid(null);
+      setFolders([]);
+      setMetadata({});
+      setSelectedFolder(null);
+      setFolderContent([]);
+      setMainMedia({ url: '', type: 'image' });
     }
 
     const handleResize = () => {
@@ -40,98 +107,54 @@ const Product = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentUseruid]);
+  }, [currentUseruid, loadUserFolders]); // Ensure loadUserFolders is in the dependency array
 
-  const loadUserFolders = useCallback((user) => {
-    const userFolderRef = ref(storage, `users/${user}/`);
-    listAll(userFolderRef)
-      .then(async (result) => {
-        const folderPromises = result.prefixes.map(async (folderRef) => {
-          const mediaItem = (await listAll(folderRef)).items.find((item) =>
-            item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
-          );
-
-          let folderPromise = Promise.resolve({
-            name: folderRef.name,
-            thumbnail: '',
-            isVideo: false,
-          });
-
-          if (mediaItem) {
-            folderPromise = getDownloadURL(mediaItem).then((url) => ({
-              name: folderRef.name,
-              thumbnail: url,
-              isVideo: /\.(mov|mp4)$/i.test(mediaItem.name),
-            }));
-          }
-
-          // Fetch metadata
-          const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
-          const metadataPromise = getDownloadURL(metadataFileRef)
-            .then((url) => fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`))
-            .then((response) => response.json())
-            .then((data) => ({ ...data, folderName: folderRef.name }))
-            .catch(() => ({
-              title: '',
-              description: '',
-              price: '',
-              quantity: '',
-              type: '',
-              folderName: folderRef.name,
-            }));
-
-          return Promise.all([folderPromise, metadataPromise]).then(([folder, metadata]) => {
-            setMetadata((prev) => ({
-              ...prev,
-              [folderRef.name]: metadata,
-            }));
-            return folder;
-          });
-        });
-
-        const foldersData = await Promise.all(folderPromises);
-        setFolders(foldersData);
-      })
-      .catch((error) => console.error('Error loading folders: ', error));
-  }, [storage]);
-
+  // **3. Rest of the component remains the same with additional exclusion logic**
   const handleFolderClick = async (folderName) => {
     const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
-    const result = await listAll(folderRef);
-    const files = await Promise.all(
-      result.items
-        .filter((itemRef) => !itemRef.name.endsWith('.json'))
-        .map(async (itemRef) => {
-          const url = await getDownloadURL(itemRef);
-          return {
-            name: itemRef.name,
-            url,
-            type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
-          };
-        })
-    );
+    try {
+      const result = await listAll(folderRef);
+      // **Exclude files starting with 'recycle'**
+      const files = await Promise.all(
+        result.items
+          .filter((itemRef) => 
+            !itemRef.name.endsWith('.json') &&
+            !itemRef.name.toLowerCase().startsWith('recycle') // Exclude 'recycle' files
+          )
+          .map(async (itemRef) => {
+            const url = await getDownloadURL(itemRef);
+            return {
+              name: itemRef.name,
+              url,
+              type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
+            };
+          })
+      );
 
-    setFolderContent(files);
-    setMainMedia(files[0] || { url: '', type: 'image' });
+      setFolderContent(files);
+      setMainMedia(files[0] || { url: '', type: 'image' });
 
-    const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
-    getDownloadURL(metadataFileRef)
-      .then((url) => fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(url)}`))
-      .then((response) => response.json())
-      .then((data) => {
+      const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
+      try {
+        const metadataUrl = await getDownloadURL(metadataFileRef);
+        const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(metadataUrl)}`);
+        const data = await response.json();
         setMetadata((prev) => ({
           ...prev,
           [folderName]: data,
         }));
-      })
-      .catch(() => {
+      } catch (error) {
+        console.warn(`Metadata not found for folder: ${folderName}`, error);
         setMetadata((prev) => ({
           ...prev,
           [folderName]: { title: '', description: '', price: '', quantity: '', type: '' },
         }));
-      });
+      }
 
-    setSelectedFolder(folderName);
+      setSelectedFolder(folderName);
+    } catch (error) {
+      console.error('Error handling folder click:', error);
+    }
   };
 
   const handleMetadataChange = (e) => {
