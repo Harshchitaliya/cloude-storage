@@ -1,236 +1,235 @@
 /* Media Module Styles */
 .media-module {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    color: #333; /* Dark text color for better readability */
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #333; /* Dark text color for better readability */
+}
+
+.message {
+  color: #4caf50;
+  margin-bottom: 20px;
+}
+
+.media-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.media-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid #ddd; /* Light gray border */
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: #fff; /* White background for cards */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  height: 250px; /* Fixed height for uniformity */
+}
+
+.media-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.media-card img, .media-card video {
+  width: 100%;
+  height: 180px; /* Fixed height for images and videos */
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.media-card p {
+  margin: 0;
+  font-size: 16px;
+  color: #555; /* Medium gray text color */
+  text-align: center;
+}
+
+.dropdown {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+.more-options {
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background for a cleaner look */
+  color: #333; /* Dark gray for the dots */
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  border-radius: 10%; /* Circle shape */
+  padding: 8px; /* More padding for a better click area */
+  outline: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+}
+
+.more-options:hover,
+.more-options:focus {
+  background-color: rgba(255, 255, 255, 1); /* Fully opaque white on hover */
+  color: #000; /* Darker color for hover state */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Slightly deeper shadow on hover */
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff; /* White background for dropdown */
+  border: 1px solid #ddd; /* Light gray border */
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  min-width: 150px;
+}
+
+.more-options:focus + .dropdown-menu,
+.dropdown-menu:hover,
+.more-options:focus-within + .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: #333; /* Dark text color */
+}
+
+.dropdown-menu button:hover {
+  background-color: #f0f0f0; /* Light gray background on hover */
+}
+
+/* Side Panel */
+.side-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 500px;
+  height: 100%;
+  background: linear-gradient(135deg, #f7f7f7 50%, #ffffff);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  border-left: 1px solid #ddd; /* Light gray border */
+}
+
+.side-panel-hidden {
+  transform: translateX(100%);
+}
+
+.side-panel-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   
-  .message {
-    color: #4caf50;
-    margin-bottom: 20px;
-  }
-  
-  .media-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    width: 100%;
-    padding: 20px 0;
-  }
-  
-  .media-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    border: 1px solid #ddd; /* Light gray border */
-    border-radius: 10px;
-    padding: 1rem;
-    background-color: #fff; /* White background for cards */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease;
-    height: 250px; /* Fixed height for uniformity */
-  }
-  
-  .media-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-  
-  .media-card img, .media-card video {
-    width: 100%;
-    height: 180px; /* Fixed height for images and videos */
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-  
-  .media-card p {
-    margin: 0;
-    font-size: 16px;
-    color: #555; /* Medium gray text color */
-    text-align: center;
-  }
-  
-  .dropdown {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 20;
-  }
-  
-  .more-options {
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background for a cleaner look */
-    color: #333; /* Dark gray for the dots */
-    border: none;
-    font-size: 1.8rem;
-    cursor: pointer;
-    border-radius: 10%; /* Circle shape */
-    padding: 8px; /* More padding for a better click area */
-    outline: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
-    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
-  }
-  
-  .more-options:hover,
-  .more-options:focus {
-    background-color: rgba(255, 255, 255, 1); /* Fully opaque white on hover */
-    color: #000; /* Darker color for hover state */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Slightly deeper shadow on hover */
-  }
-  
-  .dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #fff; /* White background for dropdown */
-    border: 1px solid #ddd; /* Light gray border */
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 30;
-    min-width: 150px;
-  }
-  
-  .more-options:focus + .dropdown-menu,
-  .dropdown-menu:hover,
-  .more-options:focus-within + .dropdown-menu {
-    display: block;
-  }
-  
-  .dropdown-menu button {
-    display: block;
-    width: 100%;
-    padding: 0.5rem 1rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    font-size: 14px;
-    color: #333; /* Dark text color */
-  }
-  
-  .dropdown-menu button:hover {
-    background-color: #f0f0f0; /* Light gray background on hover */
-  }
-  
-  /* Side Panel */
-  .side-panel {
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: 500px;
-    height: 100%;
-    background: linear-gradient(135deg, #f7f7f7 50%, #ffffff);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-    transform: translateX(0);
-    transition: transform 0.3s ease;
-    z-index: 100;
-    border-left: 1px solid #ddd; /* Light gray border */
-  }
-  
-  .side-panel-hidden {
-    transform: translateX(100%);
-  }
-  
-  .side-panel-content {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    
-  }
-  
-  .side-panel-content img, .side-panel-content video {
-    width: 100%;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    height: 550px;
-  }
-  
-  .close-button {
-    align-self: flex-end;
-    padding: 5px 10px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    transition: color 0.3s;
-    color: #333; /* Dark text color */
-  }
-  
-  .close-button:hover {
-    color: #ff5c5c; /* Red color on hover */
-    transform: scale(1.1);
-  }
-  
-  /* Side Panel Details */
-  .detail {
-    font-size: 1.5rem;
-    font-weight: bold;
-    align-self: flex-start;
-  }
-  
-  input {
-    padding: 8px;
-    width: 60%;
-    font-size: 16px;
-    text-align: center;
-    border: 1px solid #353535; /* Dark gray border */
-    border-radius: 10%;
+}
+
+.side-panel-content img, .side-panel-content video {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 550px;
+}
+
+.close-button {
+  align-self: flex-end;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+  color: #333; /* Dark text color */
+}
+
+.close-button:hover {
+  color: #ff5c5c; /* Red color on hover */
+  transform: scale(1.1);
+}
+
+/* Side Panel Details */
+.detail {
+  font-size: 1.5rem;
+  font-weight: bold;
+  align-self: flex-start;
+}
+
+input {
+  padding: 8px;
+  width: 60%;
+  font-size: 16px;
+  text-align: center;
+  border: 1px solid #353535; /* Dark gray border */
+  border-radius: 10%;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .media-module {
+    padding: 10px;
   }
 
-  .spinner {
-    border: 4px solid #f3f3f3; /* Light grey */
-    border-top: 4px solid #3498db; /* Blue */
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 2s linear infinite;
+  .media-card p {
+    font-size: 12px;
   }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+
+  .side-panel {
+    width: 100%;
   }
-  
-  
-  /* Responsive styles */
-  @media (max-width: 768px) {
-    .media-module {
-      padding: 10px;
-    }
-  
-    .media-card p {
-      font-size: 12px;
-    }
-  
-    .side-panel {
-      width: 100%;
-    }
-  
-    .side-panel-content h3 {
-      font-size: 1.2rem;
-    }
-  
-    .side-panel-content p {
-      font-size: 0.9rem;
-    }
-  
-  
+
+  .side-panel-content h3 {
+    font-size: 1.2rem;
   }
-  
-  @media (max-width: 480px) {
-    .media-card {
-      padding: 0.5rem;
-    }
-  
-    .media-card p {
-      font-size: 11px;
-    }
+
+  .side-panel-content p {
+    font-size: 0.9rem;
   }
-  
+
+
+}
+
+@media (max-width: 480px) {
+  .media-card {
+    padding: 0.5rem;
+  }
+
+  .media-card p {
+    font-size: 11px;
+  }
+}
