@@ -9,8 +9,11 @@ const PhotoModule = () => {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
-  const [loading, setLoading] = useState(false); // For showing loading state
+  const [loading, setLoading] = useState(false);
   const { currentUseruid } = useAuth();
+
+  const [selectedItems, setSelectedItems] = useState(new Set()); // For selected images
+  const [selectAll, setSelectAll] = useState(false); // Manage 'Select All' checkbox
 
   // Memoize the displayUserImages function to prevent unnecessary re-renders
   const displayUserImages = useCallback(async (uid) => {
@@ -26,15 +29,9 @@ const PhotoModule = () => {
 
           const images = await Promise.all(
             imagesResult.items.map(async (itemRef) => {
-              // **Exclude files that start with 'recycle_'**
-              if (itemRef.name.startsWith("recycle_")) {
-                return null;
-              }
+              if (itemRef.name.startsWith("recycle_")) return null;
 
-              if (
-                !itemRef.name.endsWith(".json") &&
-                itemRef.name.match(/\.(jpeg|jpg|png|webp)$/i)
-              ) {
+              if (!itemRef.name.endsWith(".json") && itemRef.name.match(/\.(jpeg|jpg|png|webp)$/i)) {
                 const url = await getDownloadURL(itemRef);
                 return { url, sku, fullPath: itemRef.fullPath };
               }
@@ -72,7 +69,6 @@ const PhotoModule = () => {
   const downloadImage = (url) => {
     const link = document.createElement("a");
     link.href = url;
-    // Extract the file name from the URL
     const fileName = url.substring(url.lastIndexOf('/') + 1);
     link.download = fileName || "image.jpg";
     link.click();
@@ -80,60 +76,107 @@ const PhotoModule = () => {
 
   const deleteImage = async (image) => {
     const originalRef = ref(storage, image.fullPath);
-    const originalName = originalRef.name;
-    const recycledName = `recycle_${originalName}`;
-    const recycledRef = ref(storage, `${originalRef.parent.fullPath}/${recycledName}`);
+    const recycledRef = ref(storage, `${originalRef.parent.fullPath}/recycle_${originalRef.name}`);
 
     try {
-      // **Fetch the image as a blob**
-      const response = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(image.url)}`)
+      const response = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(image.url)}`);
       const blob = await response.blob();
 
-      // **Upload the blob with the new 'recycle_' prefixed name**
       await uploadBytes(recycledRef, blob);
-      console.log(`Recycled image as ${recycledName} successfully.`);
-
-      // **Delete the original image**
       await deleteObject(originalRef);
-      console.log("Image recycled successfully.");
 
-      // **Update the state and UI**
-      setSidePanelOpen(false);
-      await displayUserImages(currentUseruid);
+      await displayUserImages(currentUseruid); // Refresh the UI
     } catch (error) {
       console.error("Error recycling the image:", error);
     }
   };
 
-  const shareImage = async (url) => {
+  const shareImage = async (imageUrl) => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Check out this image",
           text: "Here is an image you might like.",
-          url: url,
+          url: imageUrl,
         });
-        console.log("Image shared successfully.");
       } catch (error) {
         console.error("Sharing failed:", error);
       }
     } else {
-      console.log("Sharing is not supported on this browser.");
+      try {
+        await navigator.clipboard.writeText(imageUrl);
+        alert('Image URL copied to clipboard. You can share it manually.');
+      } catch (error) {
+        console.error("Clipboard copy failed:", error);
+      }
     }
   };
 
-  // Memoize image gallery to prevent unnecessary re-renders
+  // Select/Unselect individual image
+  const handleSelectImage = (e, image) => {
+    const updatedSelection = new Set(selectedItems);
+    if (e.target.checked) {
+      updatedSelection.add(image);
+    } else {
+      updatedSelection.delete(image);
+    }
+    setSelectedItems(updatedSelection);
+    setSelectAll(updatedSelection.size === images.length);
+  };
+
+  // Select/Unselect all images
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedItems(new Set(images));
+    } else {
+      setSelectedItems(new Set());
+    }
+    setSelectAll(e.target.checked);
+  };
+
+  // Batch Actions
+  const downloadSelected = (items) => {
+    items.forEach((item) => downloadImage(item.url));
+  };
+
+  const deleteSelectedImages = async (items) => {
+    setLoading(true);
+    try {
+      await Promise.all(Array.from(items).map((item) => deleteImage(item)));
+      setSelectedItems(new Set());
+      setSelectAll(false);
+    } catch (error) {
+      console.error("Error deleting selected items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shareSelected = (items) => {
+    items.forEach((item) => shareImage(item.url));
+  };
+
+  // Render the image gallery
   const imageGallery = useMemo(() => {
     return images.map((image, index) => (
       <LazyLoad key={index} height={200} offset={100} once>
+
         <div className="image-card" onClick={() => openImagePanel(image)}>
+
+        <div className="checkbox-wrapper">
+            <input
+              type="checkbox"
+              checked={selectedItems.has(image)}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => handleSelectImage(e, image)}
+              className="styled-checkbox"
+            />
+          </div>
+          
           <img src={image.url} alt={`SKU: ${image.sku}`} loading="lazy" />
           <p>SKU: {image.sku}</p>
           <div className="dropdown">
-            <button
-              className="more-options"
-              onClick={(e) => e.stopPropagation()} // Stop event propagation here
-            >
+            <button className="more-options" onClick={(e) => e.stopPropagation()}>
               <span>⋮</span>
             </button>
             <div className="dropdown-menu">
@@ -145,16 +188,46 @@ const PhotoModule = () => {
         </div>
       </LazyLoad>
     ));
-  }, [images]);
+  }, [images, selectedItems]);
 
   return (
     <div className="photo-module">
       {currentUseruid ? (
         <>
           {loading && <p>Loading images...</p>}
-          <div className="image-gallery">
-            {imageGallery}
-          </div>
+
+          {selectedItems.size > 0 && (
+            <div className="batch-toolbar">
+              <div className="toolbar-left">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="select-all-checkbox"
+                />
+                <span className="media-count">
+                  {selectAll ? "All images selected" : `${selectedItems.size} selected`}
+                </span>
+              </div>
+
+              <div className="toolbar-buttons">
+                <button className="unselect-button" onClick={() => setSelectedItems(new Set())}>
+                  Unselect
+                </button>
+                <button onClick={() => downloadSelected(selectedItems)} className="download-button">
+                  ⬇ Download
+                </button>
+                <button onClick={() => deleteSelectedImages(selectedItems)} className="delete-button">
+                  🗑 Delete
+                </button>
+                <button onClick={() => shareSelected(selectedItems)} className="share-button">
+                  📤 Share
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="image-gallery">{imageGallery}</div>
         </>
       ) : (
         <h1>Please log in to view images.</h1>
