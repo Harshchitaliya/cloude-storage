@@ -3,6 +3,11 @@ const cors = require('cors');
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const { getStorage } = require('firebase-admin/storage');
+const FormData = require('form-data');
+const fs = require('fs');
+const axios = require('axios');
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -53,6 +58,38 @@ app.get('/fetch-image', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
+
+app.post('/remove-background', async (req, res) => {
+  const imageUrl = req.body.imageUrl;
+
+  try {
+
+    // Download the image from the given URL
+    const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const imageBuffer = imageResponse.data;
+  
+
+    // Send the image buffer to the Python background removal service
+    const form = new FormData();
+    form.append('image', imageBuffer, 'input_image.png');
+
+    const bgRemovalResponse = await axios.post('http://127.0.0.1:5000/remove-background', form, {
+      headers: form.getHeaders(),
+      responseType: 'arraybuffer', // Expect binary response
+    });
+
+    console.log(`Received response from Python service: ${bgRemovalResponse.status}`);
+
+    // Send the background-removed image back to the React frontend
+    res.set('Content-Type', 'image/png');
+    res.send(bgRemovalResponse.data);
+  } catch (error) {
+    console.error("Error during background removal:", error.message);
+    res.status(500).json({ message: "Failed to remove background", error: error.message });
+  }
+});
+
+
 
 
 // Start the server

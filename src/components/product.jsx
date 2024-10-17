@@ -5,7 +5,7 @@ import {
   listAll, 
   getDownloadURL, 
   uploadString, 
-  deleteObject 
+  deleteObject ,uploadBytes
 } from 'firebase/storage';
 import LazyLoad from 'react-lazyload';
 import '../css/Product.css';
@@ -22,6 +22,8 @@ const Product = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [filterType, setFilterType] = useState('sku'); // Default filter type
   const [searchTerm, setSearchTerm] = useState('');
+  const [bgRemovedImage, setBgRemovedImage] = useState(null); // To hold the new image after background removal
+  const [isProcessing, setIsProcessing] = useState(false)
   const { currentUseruid } = useAuth();
   const storage = getStorage();
 
@@ -224,10 +226,70 @@ const Product = () => {
   }
 
 
-   const handlebgremove = ()=>{
-    console.log('bg remove')
-   }
-   
+
+
+  // Handle background removal when button is clicked
+  const handleBgRemove = async () => {
+    if (!mainMedia.url) return;
+  
+    setIsProcessing(true); // Set loading state
+  
+    try {
+      // Call the Node.js background removal endpoint
+      const response = await fetch('http://localhost:5001/remove-background', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageUrl: mainMedia.url }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Background removal failed');
+      }
+  
+      // Convert the response to a Blob and create a URL for display
+      const rbgResultData = await response.blob();
+      const newImageUrl = URL.createObjectURL(rbgResultData);
+  
+      // Set the new image for display
+      setBgRemovedImage(newImageUrl);
+    } catch (error) {
+      console.error("Error removing background:", error);
+    } finally {
+      setIsProcessing(false); // Reset loading state
+    }
+  };
+  
+
+  // Save the background-removed image back to Firebase
+  const handleKeepImage = async () => {
+    if (!bgRemovedImage) return;
+
+    // Convert the blob URL back to a file
+    const response = await fetch(bgRemovedImage);
+    const blob = await response.blob();
+
+    const imageRef = ref(storage, `users/${useruid}/${selectedFolder}/${mainMedia.name}-no-bg.png`);
+
+    try {
+      // Upload the image to Firebase
+      await uploadBytes(imageRef, blob);
+      alert('Image saved successfully!');
+      
+      // Optionally, you can update the UI to reflect the saved image
+      setMainMedia({ ...mainMedia, url: bgRemovedImage });
+      setBgRemovedImage(null); // Clear the bgRemovedImage
+    } catch (error) {
+      console.error("Error saving image:", error);
+    }
+  };
+
+  // Discard the background-removed image
+  const handleDiscardImage = () => {
+    setBgRemovedImage(null); // Clear the state to discard the image
+  };
+
   return (
     <div>
       {selectedFolder && (
@@ -339,12 +401,25 @@ const Product = () => {
       ) : (
         <div className="folder-content-container">
           <div className="media-content">
-            {mainMedia.type === 'video' ? (
-              <video src={mainMedia.url} controls className="main-video" loading="lazy" />
-            ) : (
-              <img src={mainMedia.url} alt="Main" className="main-image" loading="lazy" />
-            )}
-            <button className='bgremove' onClick={handlebgremove}>bg remove</button>
+          {mainMedia.type === 'video' ? (
+          <video src={mainMedia.url} controls className="main-video" loading="lazy" />
+        ) : (
+          <img src={bgRemovedImage || mainMedia.url} alt="Main" className="main-image" loading="lazy" />
+        )}
+
+            <div className="button-container">
+              <button className='bgremove' onClick={handleBgRemove} disabled={isProcessing}>
+                {isProcessing ? 'Processing...' : 'Remove Background'}
+              </button>
+              
+              {bgRemovedImage && (
+                <div className="image-actions">
+                  <button className="keep-button" onClick={handleKeepImage}>Keep</button>
+                  <button className="discard-button" onClick={handleDiscardImage}>Discard</button>
+                </div>
+              )}
+            </div>
+
 
             <div className="thumbnail-container">
               {folderContent.map((file) => (
@@ -410,3 +485,4 @@ const Product = () => {
 };
 
 export default Product;
+
