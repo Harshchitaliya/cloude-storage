@@ -223,6 +223,11 @@ const Product = () => {
     return <div>Please log in to view your products.</div>;
   }
 
+
+   const handlebgremove = ()=>{
+    console.log('bg remove')
+   }
+   
   return (
     <div>
       {selectedFolder && (
@@ -339,6 +344,8 @@ const Product = () => {
             ) : (
               <img src={mainMedia.url} alt="Main" className="main-image" loading="lazy" />
             )}
+            <button className='bgremove' onClick={handlebgremove}>bg remove</button>
+
             <div className="thumbnail-container">
               {folderContent.map((file) => (
                 <LazyLoad key={file.name} height={200} offset={100}>

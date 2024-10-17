@@ -18,10 +18,12 @@ if (!admin.apps.length) {
 const bucket = getStorage().bucket();
 
 // Middleware
-app.use(cors({
-  origin: 'http://localhost:3000',  // Replace with your frontend URL
-}));
-app.use(express.json());  // To parse JSON bodies
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // Replace with your frontend URL
+  })
+);
+app.use(express.json()); // To parse JSON bodies
 
 // Route to fetch metadata from Firebase Storage
 app.get('/fetch-metadata', async (req, res) => {
@@ -44,7 +46,7 @@ app.get('/fetch-image', async (req, res) => {
   try {
     const response = await fetch(url);
     const buffer = await response.buffer();
-    res.set('Content-Type', 'image/png');  // Adjust the content type as necessary
+    res.set('Content-Type', 'image/png'); // Adjust the content type as necessary
     res.send(buffer);
   } catch (error) {
     console.error('Error fetching image:', error);

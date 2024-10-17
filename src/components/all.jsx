@@ -101,13 +101,12 @@ const MediaModule = () => {
   const shareMedia = useCallback(async (mediaItems) => {
     if (navigator.share) {
       try {
-        for (const media of mediaItems) {
-          await navigator.share({
-            title: `Check out this ${media.type}`,
-            text: `Here is a ${media.type} you might like.`,
-            url: media.url,
-          });
-        }
+        // Construct the share message with all selected media URLs
+        const urls = Array.from(mediaItems).map(media => media.url).join('\n');
+        await navigator.share({
+          title: 'Check out these media items',
+          text: 'Here are some media items you might like:\n' + urls,
+        });
         console.log(`${mediaItems.length} ${mediaItems.length > 1 ? 'items were' : 'item was'} shared successfully.`);
       } catch (error) {
         console.error("Sharing failed:", error);
@@ -123,6 +122,7 @@ const MediaModule = () => {
       }
     }
   }, []);
+  
 
   const handleSelectItem = (e, item) => {
     const updatedSelection = new Set(selectedItems);
