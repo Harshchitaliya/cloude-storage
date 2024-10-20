@@ -8,6 +8,23 @@
   color: #333; /* Dark text color for better readability */
 }
 
+.centered-message {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Style the paragraph */
+.centered-message p {
+  font-size: 1.2rem;
+  color: #333;
+  margin: 0;
+}
+
+
 .batch-toolbar {
   display: flex;
   align-items: center;

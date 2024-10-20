@@ -193,7 +193,10 @@ const DeleteItem = () => {
           {loading ? (
             <p>Loading recycled media...</p>
           ) : recycledMedia.length === 0 ? (
-            <p>No recycled media found.</p>
+            <div class="centered-message">
+    <p>No recycled media found.</p>
+</div>
+
           ) : (
             <>
               {selectedItems.size > 0 && (

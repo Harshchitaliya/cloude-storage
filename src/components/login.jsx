@@ -127,7 +127,7 @@ const LoginForm = () => {
       </div>
 
       <div className="image-container">
-        <img src={screenshotImage} alt="image" />
+        <img src="" alt="image" />
       </div>
     </div>
   );
