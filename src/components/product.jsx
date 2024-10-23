@@ -1,15 +1,19 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  getStorage, 
-  ref, 
-  listAll, 
-  getDownloadURL, 
-  uploadString, 
-  deleteObject ,uploadBytes
-} from 'firebase/storage';
-import LazyLoad from 'react-lazyload';
-import '../css/Product.css';
-import { useAuth } from '../contex/theam';
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  getStorage,
+  ref,
+  listAll,
+  getDownloadURL,
+  uploadString,
+  deleteObject,
+  uploadBytes,
+} from "firebase/storage";
+import LazyLoad from "react-lazyload";
+import "../css/Product.css";
+import { useAuth } from "../contex/theam";
+
+// New ImageEditor component with advanced features
+import ImageEditor from "./PhotoEditor";
 
 const Product = () => {
   const [useruid, setUseruid] = useState(null);
@@ -17,77 +21,93 @@ const Product = () => {
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [folderContent, setFolderContent] = useState([]);
-  const [mainMedia, setMainMedia] = useState({ url: '', type: 'image' });
+  const [mainMedia, setMainMedia] = useState({ url: "", type: "image" });
   const [metadata, setMetadata] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [filterType, setFilterType] = useState('sku'); // Default filter type
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState("sku"); // Default filter type
+  const [searchTerm, setSearchTerm] = useState("");
   const [bgRemovedImage, setBgRemovedImage] = useState(null); // To hold the new image after background removal
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false);
   const { currentUseruid } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+
   const storage = getStorage();
 
   // **1. Define loadUserFolders before useEffect**
-  const loadUserFolders = useCallback(async (user) => {
-    const userFolderRef = ref(storage, `users/${user}/`);
-    try {
-      const result = await listAll(userFolderRef);
-      const folderPromises = result.prefixes.map(async (folderRef) => {
-        // **Exclude media items starting with 'recycle'**
-        const mediaItems = await listAll(folderRef);
-        const mediaItem = mediaItems.items.find((item) =>
-          !item.name.toLowerCase().startsWith('recycle') &&
-          item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
-        );
+  const loadUserFolders = useCallback(
+    async (user) => {
+      const userFolderRef = ref(storage, `users/${user}/`);
+      try {
+        const result = await listAll(userFolderRef);
+        const folderPromises = result.prefixes.map(async (folderRef) => {
+          // **Exclude media items starting with 'recycle'**
+          const mediaItems = await listAll(folderRef);
+          const mediaItem = mediaItems.items.find(
+            (item) =>
+              !item.name.toLowerCase().startsWith("recycle") &&
+              item.name.match(/\.(jpg|jpeg|png|mov|mp4)$/i)
+          );
 
-        let folder = {
-          name: folderRef.name,
-          thumbnail: '',
-          isVideo: false,
-        };
+          let folder = {
+            name: folderRef.name,
+            thumbnail: "",
+            isVideo: false,
+          };
 
-        if (mediaItem) {
-          const url = await getDownloadURL(mediaItem);
-          folder.thumbnail = url;
-          folder.isVideo = /\.(mov|mp4)$/i.test(mediaItem.name);
-        }
+          if (mediaItem) {
+            const url = await getDownloadURL(mediaItem);
+            folder.thumbnail = url;
+            folder.isVideo = /\.(mov|mp4)$/i.test(mediaItem.name);
+          }
 
-        // Fetch metadata
-        const metadataFileRef = ref(storage, `users/${user}/${folderRef.name}/${folderRef.name}.json`);
-        let meta = {
-          title: '',
-          description: '',
-          price: '',
-          quantity: '',
-          type: '',
-          folderName: folderRef.name,
-        };
+          // Fetch metadata
+          const metadataFileRef = ref(
+            storage,
+            `users/${user}/${folderRef.name}/${folderRef.name}.json`
+          );
+          let meta = {
+            title: "",
+            description: "",
+            price: "",
+            quantity: "",
+            type: "",
+            folderName: folderRef.name,
+          };
 
-        try {
-          const metadataUrl = await getDownloadURL(metadataFileRef);
-          const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(metadataUrl)}`);
-          const data = await response.json();
-          meta = { ...data, folderName: folderRef.name };
-        } catch (error) {
-          console.warn(`Metadata not found for folder: ${folderRef.name}`, error);
-        }
+          try {
+            const metadataUrl = await getDownloadURL(metadataFileRef);
+            const response = await fetch(
+              `http://localhost:5001/fetch-metadata?url=${encodeURIComponent(
+                metadataUrl
+              )}`
+            );
+            const data = await response.json();
+            meta = { ...data, folderName: folderRef.name };
+          } catch (error) {
+            console.warn(
+              `Metadata not found for folder: ${folderRef.name}`,
+              error
+            );
+          }
 
-        setMetadata((prev) => ({
-          ...prev,
-          [folderRef.name]: meta,
-        }));
+          setMetadata((prev) => ({
+            ...prev,
+            [folderRef.name]: meta,
+          }));
 
-        return folder;
-      });
+          return folder;
+        });
 
-      const foldersData = await Promise.all(folderPromises);
-      setFolders(foldersData);
-      setLoading(false); // Set loading to false after folders are loaded
-    } catch (error) {
-      console.error('Error loading folders: ', error);
-      setLoading(false); // Ensure loading is turned off even if there's an error
-    }
-  }, [storage]);
+        const foldersData = await Promise.all(folderPromises);
+        setFolders(foldersData);
+        setLoading(false); // Set loading to false after folders are loaded
+      } catch (error) {
+        console.error("Error loading folders: ", error);
+        setLoading(false); // Ensure loading is turned off even if there's an error
+      }
+    },
+    [storage]
+  );
 
   // **2. Now, use loadUserFolders inside useEffect**
   useEffect(() => {
@@ -100,15 +120,15 @@ const Product = () => {
       setMetadata({});
       setSelectedFolder(null);
       setFolderContent([]);
-      setMainMedia({ url: '', type: 'image' });
+      setMainMedia({ url: "", type: "image" });
     }
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [currentUseruid, loadUserFolders]); // Ensure loadUserFolders is in the dependency array
 
   // **3. Rest of the component remains the same with additional exclusion logic**
@@ -119,27 +139,35 @@ const Product = () => {
       // **Exclude files starting with 'recycle'**
       const files = await Promise.all(
         result.items
-          .filter((itemRef) => 
-            !itemRef.name.endsWith('.json') &&
-            !itemRef.name.toLowerCase().startsWith('recycle') // Exclude 'recycle' files
+          .filter(
+            (itemRef) =>
+              !itemRef.name.endsWith(".json") &&
+              !itemRef.name.toLowerCase().startsWith("recycle") // Exclude 'recycle' files
           )
           .map(async (itemRef) => {
             const url = await getDownloadURL(itemRef);
             return {
               name: itemRef.name,
               url,
-              type: /\.(mov|mp4)$/i.test(itemRef.name) ? 'video' : 'image',
+              type: /\.(mov|mp4)$/i.test(itemRef.name) ? "video" : "image",
             };
           })
       );
 
       setFolderContent(files);
-      setMainMedia(files[0] || { url: '', type: 'image' });
+      setMainMedia(files[0] || { url: "", type: "image" });
 
-      const metadataFileRef = ref(storage, `users/${useruid}/${folderName}/${folderName}.json`);
+      const metadataFileRef = ref(
+        storage,
+        `users/${useruid}/${folderName}/${folderName}.json`
+      );
       try {
         const metadataUrl = await getDownloadURL(metadataFileRef);
-        const response = await fetch(`http://localhost:5001/fetch-metadata?url=${encodeURIComponent(metadataUrl)}`);
+        const response = await fetch(
+          `http://localhost:5001/fetch-metadata?url=${encodeURIComponent(
+            metadataUrl
+          )}`
+        );
         const data = await response.json();
         setMetadata((prev) => ({
           ...prev,
@@ -149,13 +177,19 @@ const Product = () => {
         console.warn(`Metadata not found for folder: ${folderName}`, error);
         setMetadata((prev) => ({
           ...prev,
-          [folderName]: { title: '', description: '', price: '', quantity: '', type: '' },
+          [folderName]: {
+            title: "",
+            description: "",
+            price: "",
+            quantity: "",
+            type: "",
+          },
         }));
       }
 
       setSelectedFolder(folderName);
     } catch (error) {
-      console.error('Error handling folder click:', error);
+      console.error("Error handling folder click:", error);
     }
   };
 
@@ -174,31 +208,44 @@ const Product = () => {
     if (!selectedFolder) return;
 
     const metadataJson = JSON.stringify(metadata[selectedFolder]);
-    const metadataFileRef = ref(storage, `users/${useruid}/${selectedFolder}/${selectedFolder}.json`);
+    const metadataFileRef = ref(
+      storage,
+      `users/${useruid}/${selectedFolder}/${selectedFolder}.json`
+    );
 
     try {
-      await uploadString(metadataFileRef, metadataJson, 'raw', { contentType: 'application/json' });
-      alert('Metadata updated successfully!');
+      await uploadString(metadataFileRef, metadataJson, "raw", {
+        contentType: "application/json",
+      });
+      alert("Metadata updated successfully!");
     } catch (error) {
-      console.error('Error updating metadata:', error);
+      console.error("Error updating metadata:", error);
     }
   };
 
   const deleteFolderRecursively = async (folderRef) => {
     const result = await listAll(folderRef);
     await Promise.all(result.items.map((item) => deleteObject(item)));
-    await Promise.all(result.prefixes.map((subFolderRef) => deleteFolderRecursively(subFolderRef)));
+    await Promise.all(
+      result.prefixes.map((subFolderRef) =>
+        deleteFolderRecursively(subFolderRef)
+      )
+    );
   };
 
   const handleDeleteFolder = async (folderName) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete the SKU folder "${folderName}"? This action cannot be undone.`);
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the SKU folder "${folderName}"? This action cannot be undone.`
+    );
     if (!confirmDelete) return;
 
     const folderRef = ref(storage, `users/${useruid}/${folderName}/`);
     try {
       await deleteFolderRecursively(folderRef);
       alert(`SKU folder "${folderName}" has been deleted successfully.`);
-      setFolders((prevFolders) => prevFolders.filter((folder) => folder.name !== folderName));
+      setFolders((prevFolders) =>
+        prevFolders.filter((folder) => folder.name !== folderName)
+      );
       setMetadata((prevMetadata) => {
         const newMetadata = { ...prevMetadata };
         delete newMetadata[folderName];
@@ -208,7 +255,7 @@ const Product = () => {
       if (selectedFolder === folderName) {
         setSelectedFolder(null);
         setFolderContent([]);
-        setMainMedia({ url: '', type: 'image' });
+        setMainMedia({ url: "", type: "image" });
       }
     } catch (error) {
       alert(`Failed to delete SKU folder "${folderName}". Please try again.`);
@@ -217,7 +264,8 @@ const Product = () => {
 
   const filteredFolders = folders.filter((folder) => {
     const folderMetadata = metadata[folder.name] || {};
-    const valueToFilterBy = filterType === 'sku' ? folder.name : folderMetadata[filterType] || '';
+    const valueToFilterBy =
+      filterType === "sku" ? folder.name : folderMetadata[filterType] || "";
     return valueToFilterBy.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -225,33 +273,30 @@ const Product = () => {
     return <div>Please log in to view your products.</div>;
   }
 
-
-
-
   // Handle background removal when button is clicked
   const handleBgRemove = async () => {
     if (!mainMedia.url) return;
-  
+
     setIsProcessing(true); // Set loading state
-  
+
     try {
       // Call the Node.js background removal endpoint
-      const response = await fetch('http://localhost:5001/remove-background', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5001/remove-background", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ imageUrl: mainMedia.url }),
       });
-  
+
       if (!response.ok) {
-        throw new Error('Background removal failed');
+        throw new Error("Background removal failed");
       }
-  
+
       // Convert the response to a Blob and create a URL for display
       const rbgResultData = await response.blob();
       const newImageUrl = URL.createObjectURL(rbgResultData);
-  
+
       // Set the new image for display
       setBgRemovedImage(newImageUrl);
     } catch (error) {
@@ -260,7 +305,6 @@ const Product = () => {
       setIsProcessing(false); // Reset loading state
     }
   };
-  
 
   // Save the background-removed image back to Firebase
   const handleKeepImage = async () => {
@@ -270,13 +314,16 @@ const Product = () => {
     const response = await fetch(bgRemovedImage);
     const blob = await response.blob();
 
-    const imageRef = ref(storage, `users/${useruid}/${selectedFolder}/${mainMedia.name}-no-bg.png`);
+    const imageRef = ref(
+      storage,
+      `users/${useruid}/${selectedFolder}/${mainMedia.name}-no-bg.png`
+    );
 
     try {
       // Upload the image to Firebase
       await uploadBytes(imageRef, blob);
-      alert('Image saved successfully!');
-      
+      alert("Image saved successfully!");
+
       // Optionally, you can update the UI to reflect the saved image
       setMainMedia({ ...mainMedia, url: bgRemovedImage });
       setBgRemovedImage(null); // Clear the bgRemovedImage
@@ -290,6 +337,45 @@ const Product = () => {
     setBgRemovedImage(null); // Clear the state to discard the image
   };
 
+  const handleEdit = () => {
+    if (!mainMedia.url) return;
+    setIsEditing(true);
+  };
+  const handleSaveEdit = async (editedImageData) => {
+    setIsEditing(false);
+
+    // In a real implementation, you would apply the filters, transforms, and crop here
+    // For this example, we'll just use the original image URL
+    const imageUrl = editedImageData.url;
+
+    // Convert the edited image URL to a Blob
+    const response = await fetch(
+      `http://localhost:5001/fetch-image?url=${encodeURIComponent(imageUrl)}`
+    );
+    const blob = await response.blob();
+
+    const imageRef = ref(
+      storage,
+      `users/${useruid}/${selectedFolder}/${mainMedia.name}-edited.png`
+    );
+
+    try {
+      // Upload the edited image to Firebase
+      await uploadBytes(imageRef, blob);
+      alert("Edited image saved successfully!");
+
+      // Update the UI to reflect the saved image
+      const newUrl = await getDownloadURL(imageRef);
+      setMainMedia({ ...mainMedia, url: newUrl });
+    } catch (error) {
+      console.error("Error saving edited image:", error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
   return (
     <div>
       {selectedFolder && (
@@ -300,32 +386,41 @@ const Product = () => {
 
       {!selectedFolder && (
         <div className="filter-container">
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="filter-select"
+          >
             <option value="sku">SKU</option>
             <option value="title">Title</option>
             <option value="type">Type</option>
           </select>
 
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-          
+          <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+          />
+
           <div className="search-container">
             <i className="fas fa-search search-icon"></i>
             <input
               type="text"
-              placeholder={`Search by ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`}
+              placeholder={`Search by ${
+                filterType.charAt(0).toUpperCase() + filterType.slice(1)
+              }`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}     
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="filter-input"
             />
           </div>
           <button
             onClick={() => {
-              setSearchTerm('');
-              setFilterType('sku'); // Reset filter type to SKU
+              setSearchTerm("");
+              setFilterType("sku"); // Reset filter type to SKU
             }}
             className="clear-button"
           >
-            <i className="fas fa-eraser" style={{ marginRight: '8px' }}></i> 
+            <i className="fas fa-eraser" style={{ marginRight: "8px" }}></i>
             Clear Filters
           </button>
         </div>
@@ -337,16 +432,31 @@ const Product = () => {
             <div className="product-table">
               {filteredFolders.map((folder) => (
                 <div className="card" key={folder.name}>
-                  <div onClick={() => handleFolderClick(folder.name)} style={{ cursor: 'pointer' }}>
+                  <div
+                    onClick={() => handleFolderClick(folder.name)}
+                    style={{ cursor: "pointer" }}
+                  >
                     {folder.isVideo ? (
-                      <video src={folder.thumbnail} className="folder-thumbnail" muted autoPlay loop loading="lazy" />
+                      <video
+                        src={folder.thumbnail}
+                        className="folder-thumbnail"
+                        muted
+                        autoPlay
+                        loop
+                        loading="lazy"
+                      />
                     ) : (
-                      <img src={folder.thumbnail} alt={folder.name} className="folder-thumbnail" loading="lazy" />
+                      <img
+                        src={folder.thumbnail}
+                        alt={folder.name}
+                        className="folder-thumbnail"
+                        loading="lazy"
+                      />
                     )}
                     <div className="sku">{folder.name}</div>
                   </div>
-                  <button 
-                    className="delete-button" 
+                  <button
+                    className="delete-button"
                     onClick={() => handleDeleteFolder(folder.name)}
                   >
                     Delete
@@ -371,25 +481,49 @@ const Product = () => {
               <tbody>
                 {filteredFolders.map((folder) => (
                   <tr key={folder.name} className="table-row">
-                    <td onClick={() => handleFolderClick(folder.name)} style={{ cursor: 'pointer' }}>
+                    <td
+                      onClick={() => handleFolderClick(folder.name)}
+                      style={{ cursor: "pointer" }}
+                    >
                       {folder.isVideo ? (
-                        <video src={folder.thumbnail} className="folder-video-thumbnail" muted autoPlay loop loading="lazy" />
+                        <video
+                          src={folder.thumbnail}
+                          className="folder-video-thumbnail"
+                          muted
+                          autoPlay
+                          loop
+                          loading="lazy"
+                        />
                       ) : (
-                        <img src={folder.thumbnail} alt={folder.name} className="folder-image" loading="lazy" />
+                        <img
+                          src={folder.thumbnail}
+                          alt={folder.name}
+                          className="folder-image"
+                          loading="lazy"
+                        />
                       )}
                     </td>
-                    <td onClick={() => handleFolderClick(folder.name)} style={{ cursor: 'pointer' }}>{folder.name}</td>
-                    <td>{metadata[folder.name]?.title || ''}</td>
-                    <td>{metadata[folder.name]?.description || ''}</td>
-                    <td>{metadata[folder.name]?.type || ''}</td>
-                    <td>{metadata[folder.name]?.price || ''}</td>
-                    <td>{metadata[folder.name]?.quantity || ''}</td>
+                    <td
+                      onClick={() => handleFolderClick(folder.name)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {folder.name}
+                    </td>
+                    <td>{metadata[folder.name]?.title || ""}</td>
+                    <td>{metadata[folder.name]?.description || ""}</td>
+                    <td>{metadata[folder.name]?.type || ""}</td>
+                    <td>{metadata[folder.name]?.price || ""}</td>
+                    <td>{metadata[folder.name]?.quantity || ""}</td>
                     <td>
-                      <button 
-                        className="delete-button" 
+                      <button
+                        className="delete-button"
                         onClick={() => handleDeleteFolder(folder.name)}
                       >
-                        Delete <i className="fas fa-trash" style={{ marginLeft: '8px' }}></i>
+                        Delete{" "}
+                        <i
+                          className="fas fa-trash"
+                          style={{ marginLeft: "8px" }}
+                        ></i>
                       </button>
                     </td>
                   </tr>
@@ -401,30 +535,64 @@ const Product = () => {
       ) : (
         <div className="folder-content-container">
           <div className="media-content">
-          {mainMedia.type === 'video' ? (
-          <video src={mainMedia.url} controls className="main-video" loading="lazy" />
-        ) : (
-          <img src={bgRemovedImage || mainMedia.url} alt="Main" className="main-image" loading="lazy" />
-        )}
+            {isEditing ? (
+              <ImageEditor
+                imageUrl={mainMedia.url}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+              />
+            ) : mainMedia.type === "video" ? (
+              <video
+                src={mainMedia.url}
+                controls
+                className="main-video"
+                loading="lazy"
+              />
+            ) : (
+              <img
+                src={bgRemovedImage || mainMedia.url}
+                alt="Main"
+                className="main-image"
+                loading="lazy"
+              />
+            )}
 
             <div className="button-container">
-              <button className='bgremove' onClick={handleBgRemove} disabled={isProcessing}>
-                {isProcessing ? 'Processing...' : 'Remove Background'}
+              <button
+                className="bgremove"
+                onClick={handleBgRemove}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Processing..." : "Remove Background"}
               </button>
-              
+
+              <button
+                className="editimage"
+                onClick={handleEdit}
+                disabled={isEditing}
+              >
+                Edit
+              </button>
+
               {bgRemovedImage && (
                 <div className="image-actions">
-                  <button className="keep-button" onClick={handleKeepImage}>Keep</button>
-                  <button className="discard-button" onClick={handleDiscardImage}>Discard</button>
+                  <button className="keep-button" onClick={handleKeepImage}>
+                    Keep
+                  </button>
+                  <button
+                    className="discard-button"
+                    onClick={handleDiscardImage}
+                  >
+                    Discard
+                  </button>
                 </div>
               )}
             </div>
 
-
             <div className="thumbnail-container">
               {folderContent.map((file) => (
                 <LazyLoad key={file.name} height={200} offset={100}>
-                  {file.type === 'video' ? (
+                  {file.type === "video" ? (
                     <video
                       src={file.url}
                       className="thumbnail-video"
@@ -448,31 +616,46 @@ const Product = () => {
           <div className="metadata-content">
             <label>
               Title
-              <input type="text" name="title" value={metadata[selectedFolder]?.title || ''} onChange={handleMetadataChange} />
+              <input
+                type="text"
+                name="title"
+                value={metadata[selectedFolder]?.title || ""}
+                onChange={handleMetadataChange}
+              />
             </label>
             <label>
               Description
               <input
                 type="text"
                 name="description"
-                value={metadata[selectedFolder]?.description || ''}
+                value={metadata[selectedFolder]?.description || ""}
                 onChange={handleMetadataChange}
               />
             </label>
             <label>
               Type
-              <input type="text" name="type" value={metadata[selectedFolder]?.type || ''} onChange={handleMetadataChange} />
+              <input
+                type="text"
+                name="type"
+                value={metadata[selectedFolder]?.type || ""}
+                onChange={handleMetadataChange}
+              />
             </label>
             <label>
               Price
-              <input type="number" name="price" value={metadata[selectedFolder]?.price || ''} onChange={handleMetadataChange} />
+              <input
+                type="number"
+                name="price"
+                value={metadata[selectedFolder]?.price || ""}
+                onChange={handleMetadataChange}
+              />
             </label>
             <label>
               Quantity
               <input
                 type="number"
                 name="quantity"
-                value={metadata[selectedFolder]?.quantity || ''}
+                value={metadata[selectedFolder]?.quantity || ""}
                 onChange={handleMetadataChange}
               />
             </label>
@@ -485,4 +668,3 @@ const Product = () => {
 };
 
 export default Product;
-
