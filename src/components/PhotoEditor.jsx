@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import Cropper from "react-easy-crop";
 import "../css/photoeditor.css";
 
-const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
-  const [editedImage, setEditedImage] = useState(imageUrl);
+const ImageEditor = ({ imageUrl, onSave, onCancel, fetchImageFromUrl }) => {
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [grayscale, setGrayscale] = useState(0);
@@ -16,6 +15,8 @@ const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const canvasRef = useRef(null);
 
   const applyFilters = () => {
     return `
@@ -38,23 +39,78 @@ const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  const handleSave = () => {
-    onSave({
-      url: editedImage,
-      filters: { brightness, contrast, grayscale, sharpness, tone },
-      transforms: { flipHorizontal, flipVertical },
-      crop: croppedAreaPixels, // Pass the pixel values for the cropped area
+  const getImageDataUri = async (url) => {
+    const response = await fetch(`http://localhost:5001/fetch-image?url=${encodeURIComponent(url)}`);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
   };
+  
+
+  const getCroppedImage = async () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+  
+  
+    
+    
+    const image = new Image();
+image.crossOrigin = "Anonymous"; // Set this for extra CORS safety
+
+// Convert the fetched image to a data URI
+const dataUri = await getImageDataUri(imageUrl);
+image.src = dataUri;
+
+  
+    return new Promise((resolve) => {
+      image.onload = () => {
+        canvas.width = croppedAreaPixels.width;
+        canvas.height = croppedAreaPixels.height;
+  
+        context.filter = applyFilters();
+        context.drawImage(
+          image,
+          croppedAreaPixels.x,
+          croppedAreaPixels.y,
+          croppedAreaPixels.width,
+          croppedAreaPixels.height,
+          0,
+          0,
+          croppedAreaPixels.width,
+          croppedAreaPixels.height
+        );
+  
+        // Convert canvas to Blob directly
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, "image/png");
+      };
+    });
+  };
+  
+  const handleSave = async () => {
+    const editedBlob = await getCroppedImage();
+    onSave({
+      blob: editedBlob, // Directly passing the Blob
+      filters: { brightness, contrast, grayscale, sharpness, tone },
+      transforms: { flipHorizontal, flipVertical },
+      crop: croppedAreaPixels,
+    });
+  };
+  
 
   return (
     <div className="image-editor">
       <div className="crop-container">
         <Cropper
-          image={editedImage}
+          image={imageUrl} // The URL passed to the component
           crop={crop}
           zoom={zoom}
-          aspect={4 / 3} // You can adjust the aspect ratio if needed
+          aspect={4 / 3}
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={onCropComplete}
@@ -65,6 +121,7 @@ const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
             },
           }}
         />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
       <div className="editor-controls">
         <div className="slider-container">

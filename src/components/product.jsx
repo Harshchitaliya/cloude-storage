@@ -343,27 +343,19 @@ const Product = () => {
   };
   const handleSaveEdit = async (editedImageData) => {
     setIsEditing(false);
-
-    // In a real implementation, you would apply the filters, transforms, and crop here
-    // For this example, we'll just use the original image URL
-    const imageUrl = editedImageData.url;
-
-    // Convert the edited image URL to a Blob
-    const response = await fetch(
-      `http://localhost:5001/fetch-image?url=${encodeURIComponent(imageUrl)}`
-    );
-    const blob = await response.blob();
-
+  
+    const editedBlob = editedImageData.blob;
+  
     const imageRef = ref(
       storage,
       `users/${useruid}/${selectedFolder}/${mainMedia.name}-edited.png`
     );
-
+  
     try {
-      // Upload the edited image to Firebase
-      await uploadBytes(imageRef, blob);
+      // Upload the edited Blob to Firebase
+      await uploadBytes(imageRef, editedBlob);
       alert("Edited image saved successfully!");
-
+  
       // Update the UI to reflect the saved image
       const newUrl = await getDownloadURL(imageRef);
       setMainMedia({ ...mainMedia, url: newUrl });
@@ -371,7 +363,7 @@ const Product = () => {
       console.error("Error saving edited image:", error);
     }
   };
-
+  
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
