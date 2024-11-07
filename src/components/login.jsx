@@ -23,7 +23,6 @@ const LoginForm = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('Login successful', user.uid);
-      localStorage.setItem('uid', user.uid);
       navigate('/Product');
     } catch (error) {
       const errorMessage = 
